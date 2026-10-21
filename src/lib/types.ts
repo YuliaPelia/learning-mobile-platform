@@ -23,3 +23,36 @@ export type Teacher = {
   role: string;
   gradient: GradientName;
 };
+
+export type Role = 'parent' | 'student';
+
+export type User = {
+  id: string;
+  name: string;
+  role: Role;
+  email: string | null;
+  login: string;
+  birthYear: number | null;
+};
+
+/** Чому урок відкритий або закритий (access з бекенду). */
+export type LessonAccess =
+  | 'ok'
+  | 'coming_soon'
+  | 'locked_sequence'
+  | 'needs_subscription'
+  | 'login_required'
+  | 'student_only';
+
+export type Lesson = {
+  order: number;
+  title: string;
+  summary: string;
+  type: 'video' | 'text' | 'quiz';
+  xp: number;
+  free: boolean;
+  done: boolean;
+  access: LessonAccess;
+};
+
+export type CourseDetail = { course: Course; lessons: Lesson[]; comingSoon: boolean };

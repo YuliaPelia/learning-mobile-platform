@@ -16,4 +16,4 @@ export default function Courses() {
   );
 }
 
-const styles = StyleSheet.create({ list: { gap: 14 } });
+const styles = StyleSheet.create({ list: { gap: 12 } });

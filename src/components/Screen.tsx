@@ -16,10 +16,10 @@ export function Screen({ children, title }: { children: ReactNode; title?: strin
 }
 
 export const sectionTitle = StyleSheet.create({
-  t: { fontSize: 18, fontWeight: '800', color: colors.text },
+  t: { fontSize: 17, fontWeight: '700', color: colors.text },
 }).t;
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 32, gap: 18 },
-  title: { fontSize: 28, fontWeight: '800', color: colors.text },
+  title: { fontSize: 24, fontWeight: '700', color: colors.text },
 });

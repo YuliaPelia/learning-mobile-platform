@@ -1,47 +1,57 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { StyleSheet, Text, View, useWindowDimensions, ScrollView } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CourseCard } from '@/components/CourseCard';
+import { GradientCard } from '@/components/GradientCard';
 import { Pill } from '@/components/Pill';
 import { Screen, sectionTitle } from '@/components/Screen';
 import { useAsync } from '@/components/useAsync';
 import { getCourses, getTeachers } from '@/lib/api';
 import { mockCourses, mockTeachers } from '@/data/mock';
-import { colors, gradients, radius, shadow } from '@/theme';
+import { colors, radius, shadow, tints } from '@/theme';
 
 export default function Home() {
   const courses = useAsync(getCourses, mockCourses);
   const teachers = useAsync(getTeachers, mockTeachers);
-  const { width } = useWindowDimensions();
-  const cardW = Math.min(220, width * 0.58);
 
   return (
     <Screen>
-      <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-        <View style={styles.blob1} />
-        <View style={styles.blob2} />
-        <Text style={styles.heroKicker}>ITCodeCraft</Text>
-        <Text style={styles.heroTitle}>Вчись програмувати{'\n'}крок за кроком</Text>
-        <Text style={styles.heroText}>2 безкоштовні уроки в кожному курсі</Text>
-        <Pill light label="Обрати курс" onPress={() => router.push('/courses')} />
-        <View style={styles.orbit}>
-          <Ionicons name="code-slash" size={34} color="#fff" />
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.hi}>Привіт! 👋</Text>
+          <Text style={styles.sub}>Вчись програмувати крок за кроком</Text>
         </View>
-      </LinearGradient>
+        <View style={styles.avatar}>
+          <Ionicons name="person" size={20} color={colors.primary} />
+        </View>
+      </View>
 
-      <Text style={sectionTitle}>Популярні курси</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} style={styles.bleed}>
-        {courses.map((c) => <CourseCard key={c.id} course={c} width={cardW} />)}
-      </ScrollView>
+      <GradientCard name="hero" style={styles.hero}>
+        <Text style={styles.heroKicker}>ITCodeCraft</Text>
+        <Text style={styles.heroTitle}>2 безкоштовні уроки{'\n'}в кожному курсі</Text>
+        <Pill light label="Обрати курс" onPress={() => router.push('/courses')} />
+        <View style={styles.play}>
+          <Ionicons name="code-slash" size={28} color="#fff" />
+        </View>
+      </GradientCard>
+
+      <View style={styles.sectionRow}>
+        <Text style={sectionTitle}>Популярні курси</Text>
+        <Pressable accessibilityRole="link" onPress={() => router.push('/courses')}>
+          <Text style={styles.viewAll}>Усі</Text>
+        </Pressable>
+      </View>
+      <View style={styles.list}>
+        {courses.map((c) => <CourseCard key={c.id} course={c} />)}
+      </View>
 
       <Text style={sectionTitle}>Викладачі</Text>
       <View style={styles.teachers}>
         {teachers.map((t) => (
           <View key={t.id} style={styles.teacher}>
-            <LinearGradient colors={gradients[t.gradient]} style={styles.avatar}>
-              <Text style={styles.avatarText}>{t.name[0]}</Text>
-            </LinearGradient>
+            <View style={[styles.tAvatar, { backgroundColor: tints[t.gradient].bg }]}>
+              <Text style={[styles.tAvatarText, { color: tints[t.gradient].fg }]}>{t.name[0]}</Text>
+            </View>
             <Text style={styles.tName} numberOfLines={1}>{t.name}</Text>
             <Text style={styles.tRole} numberOfLines={2}>{t.role}</Text>
           </View>
@@ -52,19 +62,38 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  hero: { borderRadius: radius.lg, padding: 22, gap: 10, overflow: 'hidden', minHeight: 230, ...shadow },
-  heroKicker: { color: 'rgba(255,255,255,0.85)', fontWeight: '700' },
-  heroTitle: { color: '#fff', fontSize: 26, fontWeight: '800', lineHeight: 32 },
-  heroText: { color: 'rgba(255,255,255,0.9)', marginBottom: 6 },
-  blob1: { position: 'absolute', right: -40, top: -30, width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(255,255,255,0.15)' },
-  blob2: { position: 'absolute', right: 30, bottom: -50, width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,255,255,0.12)' },
-  orbit: { position: 'absolute', right: 22, bottom: 24, width: 72, height: 72, borderRadius: 36, borderWidth: 2, borderColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.18)' },
-  bleed: { marginHorizontal: -20 },
-  row: { paddingHorizontal: 20, gap: 14, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  hi: { fontSize: 22, fontWeight: '700', color: colors.text },
+  sub: { fontSize: 13, color: colors.muted, marginTop: 2 },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hero: { gap: 10, overflow: 'hidden', minHeight: 150 },
+  heroKicker: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600' },
+  heroTitle: { color: '#fff', fontSize: 20, fontWeight: '700', lineHeight: 26, marginBottom: 4 },
+  play: {
+    position: 'absolute',
+    right: 18,
+    bottom: 18,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  viewAll: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+  list: { gap: 12 },
   teachers: { flexDirection: 'row', gap: 12 },
-  teacher: { flex: 1, backgroundColor: '#fff', borderRadius: radius.md, padding: 12, alignItems: 'center', gap: 4, ...shadow },
-  avatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  tName: { fontWeight: '700', color: colors.text },
+  teacher: { flex: 1, backgroundColor: colors.card, borderRadius: radius.md, padding: 12, alignItems: 'center', gap: 4, ...shadow },
+  tAvatar: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  tAvatarText: { fontSize: 20, fontWeight: '700' },
+  tName: { fontWeight: '700', fontSize: 13, color: colors.text },
   tRole: { fontSize: 11, color: colors.muted, textAlign: 'center' },
 });

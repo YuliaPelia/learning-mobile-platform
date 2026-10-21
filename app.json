@@ -9,7 +9,8 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "tech.itcodecraft.app",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {

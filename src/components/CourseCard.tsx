@@ -2,39 +2,46 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Course } from '@/lib/types';
-import { GradientCard } from './GradientCard';
+import { colors, radius, shadow, tints } from '@/theme';
 
-export function CourseCard({ course, width }: { course: Course; width?: number }) {
+export function CourseCard({ course }: { course: Course }) {
+  const tint = tints[course.gradient];
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={course.title}
       onPress={() => router.push({ pathname: '/course/[id]', params: { id: course.id } })}
-      style={{ width }}>
-      <GradientCard name={course.gradient} style={styles.card}>
-        <View style={styles.icon}>
-          <Ionicons name={course.icon} size={26} color="#fff" />
-        </View>
-        <Text style={styles.title} numberOfLines={2}>{course.title}</Text>
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+      <View style={[styles.icon, { backgroundColor: tint.bg }]}>
+        <Ionicons name={course.icon} size={22} color={tint.fg} />
+      </View>
+      <View style={styles.body}>
+        <Text style={styles.title} numberOfLines={1}>{course.title}</Text>
         <Text style={styles.meta}>{course.age} років · {course.lessons} уроків</Text>
-      </GradientCard>
+      </View>
+      <View style={[styles.badge, { backgroundColor: tint.bg }]}>
+        <Text style={[styles.badgeText, { color: tint.fg }]}>{course.category}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { minHeight: 150, justifyContent: 'flex-end', gap: 6 },
-  icon: {
-    position: 'absolute',
-    top: 14,
-    left: 16,
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+  card: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    padding: 14,
+    ...shadow,
   },
-  title: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  meta: { color: 'rgba(255,255,255,0.85)', fontSize: 12 },
+  pressed: { opacity: 0.85 },
+  icon: { width: 46, height: 46, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  body: { flex: 1, gap: 2 },
+  title: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  meta: { color: colors.muted, fontSize: 12 },
+  badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  badgeText: { fontSize: 11, fontWeight: '700' },
 });

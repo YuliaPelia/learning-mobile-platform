@@ -6,7 +6,7 @@ import type { GradientName } from '@/lib/types';
 
 type Props = { name?: GradientName; style?: StyleProp<ViewStyle>; children?: ReactNode };
 
-export function GradientCard({ name = 'violet', style, children }: Props) {
+export function GradientCard({ name = 'hero', style, children }: Props) {
   return (
     <LinearGradient
       colors={gradients[name]}
@@ -19,5 +19,5 @@ export function GradientCard({ name = 'violet', style, children }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.md, padding: 16, ...shadow },
+  card: { borderRadius: radius.lg, padding: 18, ...shadow },
 });

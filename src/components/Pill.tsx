@@ -18,13 +18,11 @@ const styles = StyleSheet.create({
   pill: {
     alignSelf: 'flex-start',
     borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
     paddingHorizontal: 18,
-    paddingVertical: 8,
-    backgroundColor: '#fff',
+    paddingVertical: 9,
+    backgroundColor: colors.primarySoft,
   },
-  light: { borderColor: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' },
-  text: { color: colors.primary, fontWeight: '700', fontSize: 14 },
-  lightText: { color: '#fff' },
+  light: { backgroundColor: '#fff' },
+  text: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+  lightText: { color: colors.primaryDark },
 });
