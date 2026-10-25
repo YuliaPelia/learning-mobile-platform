@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
-import { colors, radius } from '@/theme';
+import { colors, fonts, radius } from '@/theme';
 
 type Props = TextInputProps & { label: string };
 
@@ -21,7 +21,7 @@ export function Field({ label, style, ...input }: Props) {
 
 const styles = StyleSheet.create({
   wrap: { gap: 6 },
-  label: { fontSize: 13, fontWeight: '600', color: colors.muted },
+  label: { fontSize: 13, fontFamily: fonts.semibold, color: colors.muted },
   input: {
     height: 50,
     borderRadius: radius.md,
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.card,
     paddingHorizontal: 14,
-    fontSize: 16,
+    fontFamily: fonts.regular, fontSize: 16,
     color: colors.text,
   },
 });

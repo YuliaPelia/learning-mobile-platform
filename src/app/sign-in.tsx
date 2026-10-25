@@ -7,7 +7,7 @@ import { Button } from '@/components/Button';
 import { Field } from '@/components/Field';
 import { ApiError, useAuth, type SignupRequired } from '@/lib/auth/AuthProvider';
 import { appleToken, appleAvailable, googleToken, type SocialToken } from '@/lib/auth/social';
-import { colors, radius } from '@/theme';
+import { colors, fonts, radius } from '@/theme';
 
 type Mode = 'login' | 'register';
 
@@ -141,7 +141,9 @@ function SignupForm({ signup, busy, onSubmit }: { signup: SignupRequired; busy: 
   const [birthYear, setBirthYear] = useState('');
   const [ageConfirm, setAgeConfirm] = useState(false);
   const year = Number(birthYear);
-  const ready = name.trim().length > 1 && (role === 'parent' ? ageConfirm : year > 1900);
+  // Самостійно — лише з 14 років (сервер перевіряє так само); молодшим профіль створюють батьки
+  const tooYoung = role === 'student' && birthYear.length === 4 && year > new Date().getFullYear() - 15;
+  const ready = name.trim().length > 1 && (role === 'parent' ? ageConfirm : year > 1900 && !tooYoung);
   return (
     <View style={styles.form}>
       <View style={styles.tabs}>
@@ -156,7 +158,14 @@ function SignupForm({ signup, busy, onSubmit }: { signup: SignupRequired; busy: 
       {role === 'parent' ? (
         <AgeSwitch value={ageConfirm} onChange={setAgeConfirm} />
       ) : (
-        <Field label="Рік народження" value={birthYear} onChangeText={setBirthYear} keyboardType="number-pad" maxLength={4} />
+        <>
+          <Field label="Рік народження" value={birthYear} onChangeText={setBirthYear} keyboardType="number-pad" maxLength={4} />
+          <Text style={[styles.note, tooYoung && styles.warn]}>
+            {tooYoung
+              ? 'Самостійно зареєструватися можна з 14 років. Попроси батьків створити тобі профіль на сайті — і входь за логіном від них.'
+              : 'Самостійно — з 14 років. Молодшим профіль створюють батьки.'}
+          </Text>
+        </>
       )}
       <Button
         label="Продовжити"
@@ -182,23 +191,24 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 18 },
   head: { alignItems: 'center', gap: 8, paddingTop: 12 },
   logo: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  sub: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
+  title: { fontSize: 22, fontFamily: fonts.bold, color: colors.text, textAlign: 'center' },
+  sub: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
   error: { backgroundColor: '#FFEDEF', borderRadius: radius.sm, padding: 12 },
-  errorText: { color: '#C73A4B', fontSize: 14 },
+  errorText: { color: '#C73A4B', fontFamily: fonts.regular, fontSize: 14 },
   tabs: { flexDirection: 'row', backgroundColor: colors.primarySoft, borderRadius: radius.md, padding: 4 },
   tab: { flex: 1, height: 38, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   tabOn: { backgroundColor: colors.card },
-  tabText: { fontSize: 14, fontWeight: '600', color: colors.muted },
+  tabText: { fontSize: 14, fontFamily: fonts.semibold, color: colors.muted },
   tabTextOn: { color: colors.primary },
   form: { gap: 14 },
-  note: { fontSize: 13, color: colors.muted, lineHeight: 19 },
+  warn: { color: colors.warm },
+  note: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 19 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   line: { flex: 1, height: 1, backgroundColor: colors.border },
-  or: { color: colors.muted, fontSize: 13 },
+  or: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
   socials: { gap: 12 },
   apple: { height: 50 },
-  hint: { fontSize: 12, color: colors.muted, textAlign: 'center' },
+  hint: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, textAlign: 'center' },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  switchText: { flex: 1, fontSize: 13, color: colors.text, lineHeight: 18 },
+  switchText: { flex: 1, fontFamily: fonts.regular, fontSize: 13, color: colors.text, lineHeight: 18 },
 });

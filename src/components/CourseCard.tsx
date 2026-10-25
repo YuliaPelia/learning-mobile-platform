@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Course } from '@/lib/types';
-import { colors, radius, tints } from '@/theme';
+import { colors, fonts, radius, tints } from '@/theme';
 
 export function CourseCard({ course }: { course: Course }) {
   const tint = tints[course.gradient];
@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   icon: { width: 46, height: 46, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, gap: 2 },
-  title: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  meta: { color: colors.muted, fontSize: 12 },
+  title: { color: colors.text, fontSize: 15, fontFamily: fonts.bold },
+  meta: { color: colors.muted, fontFamily: fonts.regular, fontSize: 12 },
   badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText: { fontSize: 11, fontWeight: '700' },
+  badgeText: { fontSize: 11, fontFamily: fonts.bold },
 });

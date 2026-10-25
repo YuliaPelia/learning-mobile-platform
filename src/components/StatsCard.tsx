@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import type { StudentStats } from '@/lib/types';
-import { colors, radius } from '@/theme';
+import { colors, fonts, radius } from '@/theme';
 
 // getUTCDay(): 0 — неділя
 const WEEKDAY = ['Н', 'П', 'В', 'С', 'Ч', 'П', 'С'];
@@ -94,35 +94,35 @@ function Tile({ value, label }: { value: string; label: string }) {
   );
 }
 
-const glass = { backgroundColor: 'rgba(22,19,58,0.55)', borderWidth: 1, borderColor: colors.border } as const;
+const glass = { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border } as const;
 
 const styles = StyleSheet.create({
   wrap: { gap: 12 },
   card: { ...glass, borderRadius: radius.lg, padding: 18, gap: 14 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  streak: { fontSize: 56, fontWeight: '800', color: colors.text, lineHeight: 62 },
+  streak: { fontSize: 56, fontFamily: fonts.black, color: colors.text, lineHeight: 62 },
   levelBox: { flex: 1, gap: 8 },
   levelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  streakLabel: { fontSize: 20, fontWeight: '700', color: colors.text },
+  streakLabel: { fontSize: 20, fontFamily: fonts.bold, color: colors.text },
   bar: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.14)', overflow: 'hidden' },
   barFill: { height: 8, borderRadius: 4, backgroundColor: colors.primary },
-  levelText: { fontSize: 12, color: colors.muted },
+  levelText: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
   divider: { height: 1, backgroundColor: colors.border },
   weekRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  hint: { flexShrink: 1, fontSize: 14, color: colors.muted },
+  hint: { flexShrink: 1, fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
   week: { flexDirection: 'row', gap: 4 },
   day: { width: 26, height: 34, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   dayActive: { backgroundColor: colors.primarySoft },
   dayToday: { borderWidth: 1, borderColor: colors.primary },
-  dayText: { fontSize: 13, fontWeight: '600', color: colors.muted },
+  dayText: { fontSize: 13, fontFamily: fonts.semibold, color: colors.muted },
   dayTextActive: { color: colors.text },
   tiles: { flexDirection: 'row', gap: 10 },
   tile: { ...glass, flex: 1, borderRadius: radius.md, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center', gap: 2 },
-  tileV: { fontSize: 20, fontWeight: '800', color: colors.text },
-  tileL: { fontSize: 11, color: colors.muted, textAlign: 'center' },
+  tileV: { fontSize: 20, fontFamily: fonts.black, color: colors.text },
+  tileL: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted, textAlign: 'center' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: 'rgba(255,179,107,0.16)' },
   badgeLocked: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed' },
-  badgeText: { fontSize: 12, fontWeight: '600', color: colors.text },
+  badgeText: { fontSize: 12, fontFamily: fonts.semibold, color: colors.text },
   badgeTextLocked: { color: colors.muted },
 });

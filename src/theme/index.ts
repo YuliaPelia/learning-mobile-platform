@@ -1,48 +1,71 @@
-// Нічна фіолетова тема: світлий текст на градієнтному тлі, напівпрозорі «скляні» картки
-// і світлі картки (paper) для головних дій.
+// «Programming Explorer»: космічне синьо-фіолетове тло з кольоровими «планетами»-крапками,
+// білі картки курсів і жовта кнопка дії. Сторінка курсу — світла (див. `light`).
 export const colors = {
-  bg: '#1D1946',
-  card: 'rgba(255,255,255,0.08)',
+  bg: '#2C2A93',
+  card: 'rgba(255,255,255,0.12)',
+  glass: 'rgba(20,24,90,0.45)',
   text: '#FFFFFF',
-  muted: 'rgba(255,255,255,0.68)',
-  primary: '#B3A6F7',
-  primaryDark: '#6C5CE7',
-  primarySoft: 'rgba(179,166,247,0.22)',
-  onPrimary: '#1C1842',
-  success: '#7FE0B0',
-  warm: '#FFB36B',
-  border: 'rgba(255,255,255,0.14)',
-  tabBar: '#16133A',
-  // Світлі картки
-  paper: '#F7F5FF',
-  ink: '#1F1D3B',
-  inkMuted: '#5F5C82',
+  muted: 'rgba(255,255,255,0.74)',
+  primary: '#FFC531',
+  primaryDark: '#3B4FD8',
+  primarySoft: 'rgba(255,197,49,0.2)',
+  onPrimary: '#1B2559',
+  success: '#2BD48A',
+  warm: '#FF8A4C',
+  danger: '#FFB4A6',
+  border: 'rgba(255,255,255,0.18)',
+  tabBar: '#241F7A',
+  // Білі картки
+  paper: '#FFFFFF',
+  ink: '#1B2B6B',
+  inkMuted: '#5F6C94',
+  inkFaint: '#EEF1F9',
 };
 
-/** Тло всіх екранів: від бузкового вгорі до глибокого фіолетового внизу. */
-export const screenGradient = ['#8A7ED8', '#5246A8', '#2A2462', '#1D1946'] as const;
+/** Світла сторінка (деталі курсу). */
+export const light = {
+  bg: '#F6F8FF',
+  card: '#FFFFFF',
+  text: colors.ink,
+  muted: colors.inkMuted,
+  border: '#E3E8F6',
+  accent: '#16A56B',
+};
+
+/** Кольорові «планети» для декору. */
+export const dots = ['#2BD48A', '#FFC531', '#38BDF8', '#FF6B4A', '#FFFFFF'] as const;
+
+/** Тло екранів: від синього вгорі до фіолетового внизу. */
+export const screenGradient = ['#2F6CE5', '#3450D0', '#3A35A8', '#2C2A93'] as const;
+
+export const fonts = {
+  regular: 'Montserrat_500Medium',
+  semibold: 'Montserrat_600SemiBold',
+  bold: 'Montserrat_700Bold',
+  black: 'Montserrat_800ExtraBold',
+};
 
 export const gradients = {
-  hero: ['#9C8FF0', '#6C5CE7'] as const,
+  hero: ['#3F7BF0', '#5B4BE0'] as const,
   violet: ['#7A6CF2', '#9A8DF8'] as const,
   pink: ['#F2689F', '#F993BC'] as const,
-  ocean: ['#4BA6F0', '#6C5CE7'] as const,
+  ocean: ['#38BDF8', '#3B4FD8'] as const,
 };
 
-// Плитки іконок, ключі як у `gradients`.
+// Плитки іконок на темному тлі, ключі як у `gradients`.
 export const tints = {
-  hero: { bg: 'rgba(179,166,247,0.22)', fg: '#D4CCFF' },
-  violet: { bg: 'rgba(179,166,247,0.22)', fg: '#D4CCFF' },
-  pink: { bg: 'rgba(249,147,188,0.22)', fg: '#FFC2DA' },
-  ocean: { bg: 'rgba(110,182,240,0.22)', fg: '#BFE1FF' },
+  hero: { bg: 'rgba(255,197,49,0.2)', fg: '#FFD66B' },
+  violet: { bg: 'rgba(43,212,138,0.2)', fg: '#7CEBB8' },
+  pink: { bg: 'rgba(255,107,74,0.2)', fg: '#FFAA94' },
+  ocean: { bg: 'rgba(56,189,248,0.2)', fg: '#9BDDFB' },
 } as const;
 
-export const radius = { sm: 12, md: 18, lg: 24 };
+export const radius = { sm: 14, md: 20, lg: 28 };
 
 export const shadow = {
-  shadowColor: '#0B0920',
-  shadowOpacity: 0.25,
-  shadowRadius: 18,
-  shadowOffset: { width: 0, height: 8 },
-  elevation: 4,
+  shadowColor: '#10124A',
+  shadowOpacity: 0.3,
+  shadowRadius: 20,
+  shadowOffset: { width: 0, height: 10 },
+  elevation: 6,
 };

@@ -30,6 +30,8 @@ export type User = {
   email: string | null;
   login: string;
   birthYear: number | null;
+  /** Профіль учня створили батьки — видаляти його можуть лише вони. */
+  hasParent?: boolean;
 };
 
 /** Чому урок відкритий або закритий (access з бекенду). */

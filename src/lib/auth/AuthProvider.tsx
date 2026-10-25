@@ -18,6 +18,8 @@ type Auth = {
   signInWithSocial: (token: NonNullable<SocialToken>) => Promise<SocialResult>;
   completeSignup: (input: { signupToken: string; role: 'parent' | 'student'; name: string; ageConfirm?: boolean; birthYear?: number }) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Видаляє акаунт на сервері назавжди; помилку (напр. платіжка не скасувала списання) кидає далі. */
+  deleteAccount: () => Promise<void>;
 };
 
 const AuthContext = createContext<Auth | null>(null);
@@ -68,6 +70,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { status: 'ok' };
       },
       completeSignup: async (input) => accept(await apiRequest<TokenResponse>('/auth/signup/complete', { method: 'POST', body: input })),
+      deleteAccount: async () => {
+        await apiRequest('/account/delete', { method: 'POST', body: { confirm: true }, auth: 'required' });
+        // Сервер уже відкликав усі сесії — лишається прибрати токени з пристрою
+        await setSession(null);
+        setState({ status: 'guest', user: null });
+      },
       signOut: async () => {
         const refreshToken = getRefreshToken();
         // Спершу очищаємо локально — вихід має спрацювати навіть без мережі

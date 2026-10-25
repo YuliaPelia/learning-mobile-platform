@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
-import { GradientCard } from '@/components/GradientCard';
-import { Screen, sectionTitle } from '@/components/Screen';
+import { Planet } from '@/components/Planet';
+import { Screen } from '@/components/Screen';
 import { useAsync } from '@/components/useAsync';
 import { useAuth } from '@/lib/auth/AuthProvider';
 import { getCourseDetail, getCourses } from '@/lib/api';
 import type { Course, Lesson } from '@/lib/types';
 import { mockCourses } from '@/data/mock';
-import { colors, radius } from '@/theme';
+import { colors, fonts, light, radius } from '@/theme';
 
 export default function CourseDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,27 +19,27 @@ export default function CourseDetail() {
   // Після входу стан уроків (відкрито/закрито) приходить уже для цього користувача
   const detail = useAsync(() => getCourseDetail(id), null, [id, user?.id]);
   const course = detail?.course ?? list.find((c) => c.id === id);
+  const number = list.findIndex((c) => c.id === id) + 1;
 
   if (!course) {
     return (
-      <Screen>
+      <Screen variant="light">
+        <StatusBar style="dark" />
         <BackButton />
-        <Text style={sectionTitle}>Курс не знайдено</Text>
+        <Text style={styles.section}>Курс не знайдено</Text>
       </Screen>
     );
   }
 
   return (
-    <Screen>
-      <BackButton />
-      <Hero course={course} />
+    <Screen variant="light">
+      <StatusBar style="dark" />
+      <Hero course={course} number={number} />
       <View style={styles.stats}>
         <Stat value={String(course.lessons)} label="уроків" />
         <Stat value={String(course.freeLessons)} label="безкоштовні" />
         <Stat value={course.age} label="вік" />
       </View>
-      <Text style={sectionTitle}>Про курс</Text>
-      <Text style={styles.desc}>{course.description}</Text>
 
       {detail && !detail.comingSoon && (
         <StartBlock role={user?.role ?? null} freeLessons={course.freeLessons} />
@@ -47,7 +48,7 @@ export default function CourseDetail() {
 
       {detail && detail.lessons.length > 0 && (
         <>
-          <Text style={sectionTitle}>Теми курсу</Text>
+          <Text style={styles.section}>Теми курсу</Text>
           <View style={styles.lessons}>
             {detail.lessons.map((l) => <LessonRow key={l.order} lesson={l} />)}
           </View>
@@ -64,33 +65,27 @@ function BackButton() {
       accessibilityLabel="Назад"
       onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
       style={styles.back}>
-      <Ionicons name="chevron-back" size={22} color={colors.text} />
+      <Ionicons name="arrow-back" size={26} color={light.text} />
     </Pressable>
   );
 }
 
-/** Обкладинка курсу: картинка, якщо вона є, інакше градієнт з іконкою. */
-function Hero({ course }: { course: Course }) {
-  // Підпис під картинкою, а не поверх неї: на обкладинках буває свій текст чи логотип
-  if (course.image) {
-    return (
-      <View style={styles.cover}>
-        <Image source={course.image} style={styles.coverImage} resizeMode="cover" />
-        <View style={styles.coverCaption}>
-          <Text style={[styles.title, styles.coverTitle]}>{course.title}</Text>
-          <Text style={[styles.meta, styles.coverMeta]}>{course.category} · {course.age} років</Text>
-        </View>
-      </View>
-    );
-  }
+/** Шапка: велика «планета» праворуч, бліда цифра курсу, назва й опис. */
+function Hero({ course, number }: { course: Course; number: number }) {
   return (
-    <GradientCard name="hero" style={styles.hero}>
-      <View style={styles.icon}>
-        <Ionicons name={course.icon} size={28} color="#fff" />
+    <View style={styles.hero}>
+      <View style={styles.heroPlanet} pointerEvents="none">
+        <Planet course={course} size={230} />
       </View>
-      <Text style={styles.title}>{course.title}</Text>
-      <Text style={styles.meta}>{course.category} · {course.age} років</Text>
-    </GradientCard>
+      <BackButton />
+      {number > 0 && <Text style={styles.number} accessible={false}>{number}</Text>}
+      <View style={styles.heroText}>
+        <Text style={styles.title} accessibilityRole="header">{course.title}</Text>
+        <Text style={styles.desc}>
+          <Text style={styles.highlight}>{course.category}</Text> · {course.age} років. {course.description}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -125,14 +120,14 @@ function LessonRow({ lesson }: { lesson: Lesson }) {
   return (
     <View style={styles.lesson}>
       <View style={[styles.num, lesson.done && styles.numDone]}>
-        {lesson.done ? <Ionicons name="checkmark" size={16} color={colors.onPrimary} /> : <Text style={styles.numText}>{lesson.order}</Text>}
+        {lesson.done ? <Ionicons name="checkmark" size={16} color="#fff" /> : <Text style={styles.numText}>{lesson.order}</Text>}
       </View>
       <View style={styles.lessonBody}>
         <Text style={styles.lessonTitle} numberOfLines={2}>{lesson.title}</Text>
         {(state.hint || lesson.summary) && <Text style={styles.lessonMeta} numberOfLines={1}>{state.hint ?? lesson.summary}</Text>}
       </View>
       {lesson.free && <Text style={styles.free}>Безкоштовно</Text>}
-      {!open && <Ionicons name={state.icon} size={16} color={colors.muted} accessibilityLabel="Урок закритий" />}
+      {!open && <Ionicons name={state.icon} size={16} color={light.muted} accessibilityLabel="Урок закритий" />}
     </View>
   );
 }
@@ -140,7 +135,7 @@ function LessonRow({ lesson }: { lesson: Lesson }) {
 function Note({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string }) {
   return (
     <View style={styles.note}>
-      <Ionicons name={icon} size={22} color={colors.primary} />
+      <Ionicons name={icon} size={22} color={colors.primaryDark} />
       <Text style={styles.noteText}>{text}</Text>
     </View>
   );
@@ -155,52 +150,41 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
+const card = { backgroundColor: light.card, borderRadius: radius.md, borderWidth: 1, borderColor: light.border } as const;
+
 const styles = StyleSheet.create({
-  back: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hero: { minHeight: 170, gap: 6, justifyContent: 'flex-end' },
-  cover: { backgroundColor: colors.card, borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
-  coverImage: { width: '100%', height: 190 },
-  coverCaption: { padding: 16, gap: 4 },
-  coverTitle: { color: colors.text },
-  coverMeta: { color: colors.muted },
-  icon: {
+  back: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
+  hero: { minHeight: 330, justifyContent: 'space-between' },
+  heroPlanet: { position: 'absolute', top: -20, right: -70 },
+  number: {
     position: 'absolute',
-    top: 18,
-    left: 18,
-    width: 52,
-    height: 52,
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    left: -4,
+    top: 90,
+    fontSize: 170,
+    lineHeight: 190,
+    fontFamily: fonts.black,
+    color: colors.inkFaint,
   },
-  title: { color: '#fff', fontSize: 22, fontWeight: '700' },
-  meta: { color: 'rgba(255,255,255,0.85)', fontSize: 13 },
-  desc: { fontSize: 15, lineHeight: 23, color: colors.muted },
+  heroText: { gap: 10, marginTop: 150 },
+  title: { fontSize: 34, lineHeight: 40, fontFamily: fonts.black, color: light.text },
+  desc: { fontSize: 15, lineHeight: 24, fontFamily: fonts.regular, color: light.muted },
+  highlight: { fontFamily: fonts.bold, color: light.accent },
+  section: { fontSize: 20, fontFamily: fonts.bold, color: light.text },
   stats: { flexDirection: 'row', gap: 12 },
-  stat: { flex: 1, backgroundColor: colors.card, borderRadius: radius.md, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  statV: { fontSize: 20, fontWeight: '700', color: colors.primary },
-  statL: { fontSize: 12, color: colors.muted, marginTop: 2 },
+  stat: { ...card, flex: 1, padding: 14, alignItems: 'center' },
+  statV: { fontSize: 20, fontFamily: fonts.black, color: colors.primaryDark },
+  statL: { fontSize: 12, fontFamily: fonts.regular, color: light.muted, marginTop: 2 },
   cta: { gap: 8 },
-  ctaHint: { fontSize: 12, color: colors.muted, textAlign: 'center' },
-  note: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', backgroundColor: colors.card, borderRadius: radius.md, padding: 16, borderWidth: 1, borderColor: colors.border },
-  noteText: { flex: 1, color: colors.muted, lineHeight: 20 },
+  ctaHint: { fontSize: 12, fontFamily: fonts.regular, color: light.muted, textAlign: 'center' },
+  note: { ...card, flexDirection: 'row', gap: 12, alignItems: 'flex-start', padding: 16 },
+  noteText: { flex: 1, fontFamily: fonts.regular, color: light.muted, lineHeight: 21 },
   lessons: { gap: 10 },
-  lesson: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.card, borderRadius: radius.md, padding: 12, borderWidth: 1, borderColor: colors.border },
-  num: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  numDone: { backgroundColor: colors.success },
-  numText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+  lesson: { ...card, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  num: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#EEF0FF', alignItems: 'center', justifyContent: 'center' },
+  numDone: { backgroundColor: light.accent },
+  numText: { color: colors.primaryDark, fontFamily: fonts.bold, fontSize: 13 },
   lessonBody: { flex: 1, gap: 2 },
-  lessonTitle: { color: colors.text, fontSize: 14, fontWeight: '600' },
-  lessonMeta: { color: colors.muted, fontSize: 12 },
-  free: { color: colors.success, fontSize: 11, fontWeight: '700' },
+  lessonTitle: { color: light.text, fontSize: 14, fontFamily: fonts.semibold },
+  lessonMeta: { color: light.muted, fontSize: 12, fontFamily: fonts.regular },
+  free: { color: light.accent, fontSize: 11, fontFamily: fonts.bold },
 });

@@ -77,3 +77,8 @@ export async function getStats(): Promise<StudentProgress[] | null> {
     return null;
   }
 }
+
+/** Батьки видаляють профіль своєї дитини (прогрес і домашки — назавжди). */
+export async function deleteChild(id: string): Promise<void> {
+  await apiRequest(`/children/${encodeURIComponent(id)}/delete`, { method: 'POST', body: { confirm: true }, auth: 'required' });
+}

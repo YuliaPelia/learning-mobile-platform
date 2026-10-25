@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors } from '@/theme';
+import { colors, fonts } from '@/theme';
 
 type Props = { label: string; onPress?: () => void; light?: boolean };
 
@@ -23,6 +23,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
   },
   light: { backgroundColor: colors.paper },
-  text: { color: colors.primary, fontWeight: '700', fontSize: 13 },
+  text: { color: colors.primary, fontFamily: fonts.bold, fontSize: 13 },
   lightText: { color: colors.primaryDark },
 });
