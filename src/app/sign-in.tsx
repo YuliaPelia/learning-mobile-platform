@@ -90,7 +90,7 @@ export default function SignIn() {
               {appleAvailable && (
                 <AppleAuthentication.AppleAuthenticationButton
                   buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
                   cornerRadius={radius.md}
                   style={styles.apple}
                   onPress={() => social(appleToken)}

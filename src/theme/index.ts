@@ -1,36 +1,48 @@
+// Нічна фіолетова тема: світлий текст на градієнтному тлі, напівпрозорі «скляні» картки
+// і світлі картки (paper) для головних дій.
 export const colors = {
-  bg: '#F6F7FD',
-  card: '#FFFFFF',
-  text: '#1F1D3B',
-  muted: '#8B8AA8',
-  primary: '#6C5CE7',
-  primaryDark: '#4F3FD1',
-  primarySoft: '#EDEAFF',
-  success: '#34C47C',
-  border: '#ECEBF6',
+  bg: '#1D1946',
+  card: 'rgba(255,255,255,0.08)',
+  text: '#FFFFFF',
+  muted: 'rgba(255,255,255,0.68)',
+  primary: '#B3A6F7',
+  primaryDark: '#6C5CE7',
+  primarySoft: 'rgba(179,166,247,0.22)',
+  onPrimary: '#1C1842',
+  success: '#7FE0B0',
+  warm: '#FFB36B',
+  border: 'rgba(255,255,255,0.14)',
+  tabBar: '#16133A',
+  // Світлі картки
+  paper: '#F7F5FF',
+  ink: '#1F1D3B',
+  inkMuted: '#5F5C82',
 };
 
+/** Тло всіх екранів: від бузкового вгорі до глибокого фіолетового внизу. */
+export const screenGradient = ['#8A7ED8', '#5246A8', '#2A2462', '#1D1946'] as const;
+
 export const gradients = {
-  hero: ['#7A6CF2', '#5A48DB'] as const,
+  hero: ['#9C8FF0', '#6C5CE7'] as const,
   violet: ['#7A6CF2', '#9A8DF8'] as const,
   pink: ['#F2689F', '#F993BC'] as const,
   ocean: ['#4BA6F0', '#6C5CE7'] as const,
 };
 
-// Soft tile colors for icons, keyed like `gradients`.
+// Плитки іконок, ключі як у `gradients`.
 export const tints = {
-  hero: { bg: '#EDEAFF', fg: '#6C5CE7' },
-  violet: { bg: '#EDEAFF', fg: '#6C5CE7' },
-  pink: { bg: '#FFE9F2', fg: '#E8528D' },
-  ocean: { bg: '#E3F1FF', fg: '#2F8FE5' },
+  hero: { bg: 'rgba(179,166,247,0.22)', fg: '#D4CCFF' },
+  violet: { bg: 'rgba(179,166,247,0.22)', fg: '#D4CCFF' },
+  pink: { bg: 'rgba(249,147,188,0.22)', fg: '#FFC2DA' },
+  ocean: { bg: 'rgba(110,182,240,0.22)', fg: '#BFE1FF' },
 } as const;
 
-export const radius = { sm: 12, md: 16, lg: 22 };
+export const radius = { sm: 12, md: 18, lg: 24 };
 
 export const shadow = {
-  shadowColor: '#4F3FD1',
-  shadowOpacity: 0.07,
-  shadowRadius: 14,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 2,
+  shadowColor: '#0B0920',
+  shadowOpacity: 0.25,
+  shadowRadius: 18,
+  shadowOffset: { width: 0, height: 8 },
+  elevation: 4,
 };

@@ -1,6 +1,7 @@
-import { mockCourses, mockTeachers } from '@/data/mock';
+import { courseImages } from '@/data/courseImages';
+import { mockCourses } from '@/data/mock';
 import { apiRequest } from '@/lib/http';
-import type { Course, CourseDetail, IconName, Lesson, Teacher, GradientName } from './types';
+import type { Course, CourseDetail, IconName, Lesson, GradientName, StudentProgress } from './types';
 
 type ApiCourse = {
   slug: string;
@@ -11,6 +12,7 @@ type ApiCourse = {
   ageTo: number;
   lessonsCount?: number;
   freeLessons: number;
+  status: string;
 };
 
 const CATEGORY: Record<ApiCourse['category'], { label: string; gradient: GradientName; icon: IconName }> = {
@@ -34,6 +36,8 @@ function toCourse(c: ApiCourse): Course {
     description: c.description ?? '',
     gradient: cat.gradient,
     icon: cat.icon,
+    image: courseImages[c.slug],
+    soon: c.status !== 'published',
   };
 }
 
@@ -41,7 +45,8 @@ function toCourse(c: ApiCourse): Course {
 export async function getCourses(): Promise<Course[]> {
   try {
     const { courses } = await apiRequest<{ courses: ApiCourse[] }>('/courses');
-    return courses.map(toCourse);
+    // Відкриті курси першими, «скоро» — після них (порядок усередині як на сайті)
+    return courses.map(toCourse).sort((a, b) => Number(!!a.soon) - Number(!!b.soon));
   } catch {
     return mockCourses;
   }
@@ -50,7 +55,7 @@ export async function getCourses(): Promise<Course[]> {
 /** Курс і його теми. Якщо користувач увійшов, уроки приходять із його станом доступу. */
 export async function getCourseDetail(slug: string): Promise<CourseDetail | null> {
   try {
-    const res = await apiRequest<{ course: ApiCourse & { status: string }; lessons: Lesson[] }>(`/courses/${encodeURIComponent(slug)}`, {
+    const res = await apiRequest<{ course: ApiCourse; lessons: Lesson[] }>(`/courses/${encodeURIComponent(slug)}`, {
       auth: 'optional',
     });
     return {
@@ -63,5 +68,12 @@ export async function getCourseDetail(slug: string): Promise<CourseDetail | null
   }
 }
 
-// Публічного ендпоінта викладачів ще немає — лишаємо демо-дані.
-export const getTeachers = async (): Promise<Teacher[]> => mockTeachers;
+/** Статистика: дитина отримує себе, батьки — кожну свою дитину. null — гість або немає звʼязку. */
+export async function getStats(): Promise<StudentProgress[] | null> {
+  try {
+    const { students } = await apiRequest<{ students: StudentProgress[] }>('/stats', { auth: 'required' });
+    return students;
+  } catch {
+    return null;
+  }
+}

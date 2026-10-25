@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
-import { colors, shadow } from '@/theme';
+import { colors } from '@/theme';
 
 type Name = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -20,7 +20,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        tabBarStyle: { backgroundColor: colors.card, borderTopWidth: 0, ...shadow, shadowOpacity: 0.1 },
+        tabBarStyle: { backgroundColor: colors.tabBar, borderTopColor: colors.border },
       }}>
       <Tabs.Screen name="index" options={tab('Головна', 'home-outline', 'home')} />
       <Tabs.Screen name="courses" options={tab('Курси', 'book-outline', 'book')} />

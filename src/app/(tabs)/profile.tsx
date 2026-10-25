@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Screen } from '@/components/Screen';
 import { useAuth } from '@/lib/auth/AuthProvider';
-import { colors, radius, shadow } from '@/theme';
+import { colors, radius } from '@/theme';
 
 export default function Profile() {
   const { status, user, signOut } = useAuth();
@@ -53,6 +53,6 @@ const styles = StyleSheet.create({
   },
   h: { color: colors.text, fontSize: 20, fontWeight: '700' },
   p: { color: colors.muted, textAlign: 'center' },
-  note: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', backgroundColor: colors.card, borderRadius: radius.md, padding: 16, ...shadow },
+  note: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', backgroundColor: colors.card, borderRadius: radius.md, padding: 16, borderWidth: 1, borderColor: colors.border },
   noteT: { flex: 1, color: colors.muted, lineHeight: 20 },
 });

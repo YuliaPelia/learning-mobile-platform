@@ -28,14 +28,29 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.733888533837-2cf0r3dl4lhveduh7mdl7utp0oqj1m7i"
+        }
+      ]
     ],
     "scheme": "itcodecraft",
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "https://itcodecraft.tech"
-    }
+      "apiUrl": "https://learning-platform-alpha-jet.vercel.app",
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "de66db6b-0da0-4bf6-a146-53e40f14d18a"
+      }
+    },
+    "owner": "itcodecraft"
   }
 }

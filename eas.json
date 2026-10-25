@@ -1,9 +1,34 @@
 {
-  "cli": { "version": ">= 16.0.0", "appVersionSource": "remote" },
-  "build": {
-    "development": { "developmentClient": true, "distribution": "internal" },
-    "preview": { "distribution": "internal" },
-    "production": { "autoIncrement": true, "env": { "EXPO_PUBLIC_API_URL": "https://itcodecraft.tech" } }
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
   },
-  "submit": { "production": {} }
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "733888533837-d8vuvkdfgvg4mkacdbi72nqjkcma7u75.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "733888533837-2cf0r3dl4lhveduh7mdl7utp0oqj1m7i.apps.googleusercontent.com"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "733888533837-d8vuvkdfgvg4mkacdbi72nqjkcma7u75.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "733888533837-2cf0r3dl4lhveduh7mdl7utp0oqj1m7i.apps.googleusercontent.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://learning-platform-alpha-jet.vercel.app",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "733888533837-d8vuvkdfgvg4mkacdbi72nqjkcma7u75.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "733888533837-2cf0r3dl4lhveduh7mdl7utp0oqj1m7i.apps.googleusercontent.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
 }

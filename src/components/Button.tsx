@@ -13,7 +13,7 @@ export function Button({ label, onPress, loading, disabled, variant = 'primary' 
       onPress={onPress}
       style={({ pressed }) => [styles.btn, outline && styles.outline, (disabled || pressed) && styles.dim]}>
       {loading ? (
-        <ActivityIndicator color={outline ? colors.primary : '#fff'} />
+        <ActivityIndicator color={outline ? colors.text : colors.onPrimary} />
       ) : (
         <Text style={[styles.text, outline && styles.outlineText]}>{label}</Text>
       )}
@@ -31,6 +31,6 @@ const styles = StyleSheet.create({
   },
   outline: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
   dim: { opacity: 0.7 },
-  text: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  text: { color: colors.onPrimary, fontSize: 16, fontWeight: '700' },
   outlineText: { color: colors.text },
 });

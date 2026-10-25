@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     backgroundColor: colors.primarySoft,
   },
-  light: { backgroundColor: '#fff' },
+  light: { backgroundColor: colors.paper },
   text: { color: colors.primary, fontWeight: '700', fontSize: 13 },
   lightText: { color: colors.primaryDark },
 });
