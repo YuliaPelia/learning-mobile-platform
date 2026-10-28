@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Field } from '@/components/Field';
 import { ApiError, useAuth, type SignupRequired } from '@/lib/auth/AuthProvider';
@@ -52,8 +52,13 @@ export default function SignIn() {
     });
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.flex} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      style={styles.flex}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+      automaticallyAdjustKeyboardInsets
+    >
         <View style={styles.head}>
           <View style={styles.logo}>
             <Ionicons name="school" size={30} color={colors.primary} />
@@ -128,8 +133,7 @@ export default function SignIn() {
           <Text accessibilityRole="link" style={styles.docLink} onPress={() => openDoc('terms')}>Правилами користування</Text> і{' '}
           <Text accessibilityRole="link" style={styles.docLink} onPress={() => openDoc('privacy')}>Політикою конфіденційності</Text>.
         </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </ScrollView>
   );
 }
 
