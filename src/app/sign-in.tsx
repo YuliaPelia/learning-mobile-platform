@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Field } from '@/components/Field';
 import { ApiError, useAuth, type SignupRequired } from '@/lib/auth/AuthProvider';
 import { appleToken, appleAvailable, googleToken, type SocialToken } from '@/lib/auth/social';
+import { readAgeGate, writeAgeGate, type AgeGate } from '@/lib/auth/storage';
+import { openDoc } from '@/lib/docs';
 import { colors, fonts, radius } from '@/theme';
 
 type Mode = 'login' | 'register';
@@ -18,6 +20,12 @@ export default function SignIn() {
   const [signup, setSignup] = useState<SignupRequired | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Віковий екран перед Google/Apple: SDK не запускаємо, доки не відомо, що користувачу є 14
+  const [gate, setGate] = useState<AgeGate | null | 'loading'>('loading');
+  const [gateYear, setGateYear] = useState<number | null>(null);
+  useEffect(() => {
+    readAgeGate().then(setGate);
+  }, []);
 
   const done = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -63,7 +71,7 @@ export default function SignIn() {
         )}
 
         {signup ? (
-          <SignupForm signup={signup} busy={busy} onSubmit={(input) => run(async () => { await auth.completeSignup({ signupToken: signup.signupToken, ...input }); done(); })} />
+          <SignupForm signup={signup} initialYear={gateYear} busy={busy} onSubmit={(input) => run(async () => { await auth.completeSignup({ signupToken: signup.signupToken, ...input }); done(); })} />
         ) : (
           <>
             <View style={styles.tabs}>
@@ -86,21 +94,40 @@ export default function SignIn() {
               <View style={styles.line} />
             </View>
 
-            <View style={styles.socials}>
-              {appleAvailable && (
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
-                  cornerRadius={radius.md}
-                  style={styles.apple}
-                  onPress={() => social(appleToken)}
-                />
-              )}
-              <Button variant="outline" label="Продовжити з Google" disabled={busy} onPress={() => social(googleToken)} />
-            </View>
+            {gate === 'ok' && (
+              <View style={styles.socials}>
+                {appleAvailable && (
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                    cornerRadius={radius.md}
+                    style={styles.apple}
+                    onPress={() => social(appleToken)}
+                  />
+                )}
+                <Button variant="outline" label="Продовжити з Google" disabled={busy} onPress={() => social(googleToken)} />
+              </View>
+            )}
+            {gate === null && (
+              <AgeGateForm
+                onDone={(result, year) => {
+                  setGate(result);
+                  setGateYear(year);
+                  writeAgeGate(result);
+                }}
+              />
+            )}
+            {gate === 'young' && (
+              <Text style={styles.note}>Вхід через Google чи Apple недоступний. Увійди за логіном і паролем, які створили для тебе батьки.</Text>
+            )}
             {mode === 'login' && <Text style={styles.hint}>Дитина входить за логіном, який створили батьки в кабінеті.</Text>}
           </>
         )}
+        <Text style={styles.hint}>
+          Продовжуючи, ви погоджуєтеся з{' '}
+          <Text accessibilityRole="link" style={styles.docLink} onPress={() => openDoc('terms')}>Правилами користування</Text> і{' '}
+          <Text accessibilityRole="link" style={styles.docLink} onPress={() => openDoc('privacy')}>Політикою конфіденційності</Text>.
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -135,10 +162,31 @@ function RegisterForm({ busy, onSubmit }: { busy: boolean; onSubmit: (i: { name:
   );
 }
 
-function SignupForm({ signup, busy, onSubmit }: { signup: SignupRequired; busy: boolean; onSubmit: (i: { role: 'parent' | 'student'; name: string; ageConfirm?: boolean; birthYear?: number }) => void }) {
+/** Нейтральний віковий екран: поріг не підказуємо, результат запам'ятовуємо. */
+function AgeGateForm({ onDone }: { onDone: (result: AgeGate, year: number) => void }) {
+  const [birthYear, setBirthYear] = useState('');
+  const [invalid, setInvalid] = useState(false);
+  const submit = () => {
+    const year = Number(birthYear);
+    const now = new Date().getFullYear();
+    if (!Number.isInteger(year) || year < now - 100 || year > now) return setInvalid(true);
+    // Відомий лише рік — тож «точно виповнилося 14», як і на сервері
+    onDone(year <= now - 15 ? 'ok' : 'young', year);
+  };
+  return (
+    <View style={styles.form}>
+      <Text style={styles.note}>Щоб продовжити з Google або Apple, вкажи рік народження.</Text>
+      <Field label="Рік народження" value={birthYear} onChangeText={(v) => { setBirthYear(v); setInvalid(false); }} keyboardType="number-pad" maxLength={4} />
+      {invalid && <Text style={[styles.note, styles.warn]}>Вкажи рік народження чотирма цифрами.</Text>}
+      <Button variant="outline" label="Далі" disabled={birthYear.length !== 4} onPress={submit} />
+    </View>
+  );
+}
+
+function SignupForm({ signup, initialYear, busy, onSubmit }: { signup: SignupRequired; initialYear: number | null; busy: boolean; onSubmit: (i: { role: 'parent' | 'student'; name: string; ageConfirm?: boolean; birthYear?: number }) => void }) {
   const [role, setRole] = useState<'parent' | 'student'>('parent');
   const [name, setName] = useState(signup.name);
-  const [birthYear, setBirthYear] = useState('');
+  const [birthYear, setBirthYear] = useState(initialYear ? String(initialYear) : '');
   const [ageConfirm, setAgeConfirm] = useState(false);
   const year = Number(birthYear);
   // Самостійно — лише з 14 років (сервер перевіряє так само); молодшим профіль створюють батьки
@@ -160,11 +208,11 @@ function SignupForm({ signup, busy, onSubmit }: { signup: SignupRequired; busy: 
       ) : (
         <>
           <Field label="Рік народження" value={birthYear} onChangeText={setBirthYear} keyboardType="number-pad" maxLength={4} />
-          <Text style={[styles.note, tooYoung && styles.warn]}>
-            {tooYoung
-              ? 'Самостійно зареєструватися можна з 14 років. Попроси батьків створити тобі профіль на сайті — і входь за логіном від них.'
-              : 'Самостійно — з 14 років. Молодшим профіль створюють батьки.'}
-          </Text>
+          {tooYoung && (
+            <Text style={[styles.note, styles.warn]}>
+              Самостійно зареєструватися можна з 14 років. Попроси батьків створити тобі профіль на сайті — і входь за логіном від них.
+            </Text>
+          )}
         </>
       )}
       <Button
@@ -202,6 +250,7 @@ const styles = StyleSheet.create({
   tabTextOn: { color: colors.primary },
   form: { gap: 14 },
   warn: { color: colors.warm },
+  docLink: { color: colors.text, textDecorationLine: 'underline' },
   note: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 19 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   line: { flex: 1, height: 1, backgroundColor: colors.border },

@@ -10,7 +10,10 @@
       "supportsTablet": false,
       "bundleIdentifier": "tech.itcodecraft.app",
       "buildNumber": "1",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {

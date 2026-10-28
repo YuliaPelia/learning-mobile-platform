@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
@@ -8,10 +7,8 @@ import { Screen, sectionTitle } from '@/components/Screen';
 import { useAsync } from '@/components/useAsync';
 import { deleteChild, getStats } from '@/lib/api';
 import { useAuth } from '@/lib/auth/AuthProvider';
-import { API_URL } from '@/lib/config';
+import { openDoc } from '@/lib/docs';
 import { colors, fonts, radius } from '@/theme';
-
-const openDoc = (path: string) => WebBrowser.openBrowserAsync(`${API_URL}${path}`);
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : 'Щось пішло не так. Спробуйте ще раз.');
 
@@ -112,10 +109,10 @@ export default function Profile() {
       </View>
 
       <View style={styles.links}>
-        <Pressable accessibilityRole="link" onPress={() => openDoc('/legal/privacy')} hitSlop={8}>
+        <Pressable accessibilityRole="link" onPress={() => openDoc('privacy')} hitSlop={8}>
           <Text style={styles.link}>Політика конфіденційності</Text>
         </Pressable>
-        <Pressable accessibilityRole="link" onPress={() => openDoc('/legal/terms')} hitSlop={8}>
+        <Pressable accessibilityRole="link" onPress={() => openDoc('terms')} hitSlop={8}>
           <Text style={styles.link}>Правила користування</Text>
         </Pressable>
       </View>
