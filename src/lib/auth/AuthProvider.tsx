@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { apiRequest, ApiError } from '@/lib/http';
-import type { User } from '@/lib/types';
+import type { RegisterCodeSent, User } from '@/lib/types';
 import { getRefreshToken, loadSession, onSessionChange, setSession, type TokenResponse } from './session';
 import type { SocialToken } from './social';
 
@@ -14,7 +14,9 @@ type Auth = {
   status: Status;
   user: User | null;
   signIn: (login: string, password: string) => Promise<void>;
-  register: (input: { name: string; email: string; password: string; ageConfirm: boolean }) => Promise<void>;
+  /** Надсилає код на пошту. Акаунт ще не створюється. */
+  requestRegisterCode: (input: { name: string; email: string; password: string; ageConfirm: boolean }) => Promise<void>;
+  register: (input: { name: string; email: string; password: string; ageConfirm: boolean; code: string }) => Promise<void>;
   signInWithSocial: (token: NonNullable<SocialToken>) => Promise<SocialResult>;
   completeSignup: (input: { signupToken: string; role: 'parent' | 'student'; name: string; ageConfirm?: boolean; birthYear?: number }) => Promise<void>;
   signOut: () => Promise<void>;
@@ -58,6 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       signIn: async (login, password) => accept(await apiRequest<TokenResponse>('/auth/login', { method: 'POST', body: { login, password } })),
+      requestRegisterCode: async (input) => {
+        await apiRequest<RegisterCodeSent>('/auth/register/code', { method: 'POST', body: input });
+      },
       register: async (input) => accept(await apiRequest<TokenResponse>('/auth/register', { method: 'POST', body: input })),
       signInWithSocial: async (token) => {
         const { provider, ...credentials } = token;

@@ -1,6 +1,7 @@
 import { courseImages } from '@/data/courseImages';
 import { mockCourses } from '@/data/mock';
-import { apiRequest } from '@/lib/http';
+import { readCache, writeCache } from '@/lib/cache';
+import { ApiError, apiRequest } from '@/lib/http';
 import type { Course, CourseDetail, IconName, Lesson, GradientName, StudentProgress } from './types';
 
 type ApiCourse = {
@@ -41,16 +42,26 @@ function toCourse(c: ApiCourse): Course {
   };
 }
 
+const sortCourses = (courses: ApiCourse[]) => courses.map(toCourse).sort((a, b) => Number(!!a.soon) - Number(!!b.soon));
+
 // Якщо сервер недоступний, показуємо демо-курси, щоб додаток не був порожнім.
 export async function getCourses(): Promise<Course[]> {
   try {
     const { courses } = await apiRequest<{ courses: ApiCourse[] }>('/courses');
     // Відкриті курси першими, «скоро» — після них (порядок усередині як на сайті)
-    return courses.map(toCourse).sort((a, b) => Number(!!a.soon) - Number(!!b.soon));
+    writeCache('courses', courses);
+    return sortCourses(courses);
   } catch {
-    return mockCourses;
+    const cached = await readCache<ApiCourse[]>('courses');
+    return cached ? sortCourses(cached) : mockCourses;
   }
 }
+
+const toDetail = (res: { course: ApiCourse; lessons: Lesson[] }): CourseDetail => ({
+  course: { ...toCourse(res.course), lessons: res.lessons.length },
+  lessons: res.lessons,
+  comingSoon: res.course.status !== 'published',
+});
 
 /** Курс і його теми. Якщо користувач увійшов, уроки приходять із його станом доступу. */
 export async function getCourseDetail(slug: string): Promise<CourseDetail | null> {
@@ -58,13 +69,12 @@ export async function getCourseDetail(slug: string): Promise<CourseDetail | null
     const res = await apiRequest<{ course: ApiCourse; lessons: Lesson[] }>(`/courses/${encodeURIComponent(slug)}`, {
       auth: 'optional',
     });
-    return {
-      course: { ...toCourse(res.course), lessons: res.lessons.length },
-      lessons: res.lessons,
-      comingSoon: res.course.status !== 'published',
-    };
-  } catch {
-    return null;
+    writeCache(`course.${slug}`, res);
+    return toDetail(res);
+  } catch (e) {
+    if (!(e instanceof ApiError && e.code === 'network')) return null;
+    const cached = await readCache<{ course: ApiCourse; lessons: Lesson[] }>(`course.${slug}`);
+    return cached ? toDetail(cached) : null;
   }
 }
 
@@ -72,9 +82,11 @@ export async function getCourseDetail(slug: string): Promise<CourseDetail | null
 export async function getStats(): Promise<StudentProgress[] | null> {
   try {
     const { students } = await apiRequest<{ students: StudentProgress[] }>('/stats', { auth: 'required' });
+    writeCache('stats', students);
     return students;
-  } catch {
-    return null;
+  } catch (e) {
+    // Лише коли немає інтернету: помилки доступу (гість, сесію скасовано) кеш не обходить
+    return e instanceof ApiError && e.code === 'network' ? readCache<StudentProgress[]>('stats') : null;
   }
 }
 

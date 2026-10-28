@@ -1,13 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
+import { ChildReport } from '@/components/ChildReport';
 import { Screen, sectionTitle } from '@/components/Screen';
+import { StatsCard } from '@/components/StatsCard';
 import { useAsync } from '@/components/useAsync';
 import { deleteChild, getStats } from '@/lib/api';
 import { useAuth } from '@/lib/auth/AuthProvider';
+import { clearCache } from '@/lib/cache';
 import { openDoc } from '@/lib/docs';
+import { requestPermission } from '@/lib/study/notifications';
+import { minutesToday, quizAccuracy } from '@/lib/study/metrics';
+import { study, useStudy } from '@/lib/study/store';
 import { colors, fonts, radius } from '@/theme';
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : 'Щось пішло не так. Спробуйте ще раз.');
@@ -17,7 +23,8 @@ export default function Profile() {
   const [reload, setReload] = useState(0);
   const [busy, setBusy] = useState(false);
   const isParent = user?.role === 'parent';
-  const children = useAsync(() => (isParent ? getStats() : Promise.resolve(null)), null, [user?.id, reload]);
+  const learn = useStudy();
+  const progress = useAsync(() => (user ? getStats() : Promise.resolve(null)), null, [user?.id, reload]);
 
   const confirmDeleteAccount = () =>
     Alert.alert(
@@ -34,6 +41,8 @@ export default function Profile() {
             setBusy(true);
             try {
               await deleteAccount();
+              study.reset();
+              clearCache();
               Alert.alert('Акаунт видалено', 'Дякуємо, що були з нами.');
             } catch (e) {
               Alert.alert('Не вдалося видалити', errorText(e));
@@ -66,7 +75,7 @@ export default function Profile() {
     <Screen title="Профіль">
       <View style={styles.head}>
         <View style={styles.avatar}>
-          <Ionicons name="person" size={40} color={colors.primary} />
+          {user ? <Text style={styles.initial}>{user.name[0]?.toUpperCase()}</Text> : <Ionicons name="person" size={40} color={colors.primary} />}
         </View>
         {user ? (
           <>
@@ -82,12 +91,73 @@ export default function Profile() {
       </View>
 
       {status === 'guest' && <Button label="Увійти або зареєструватися" onPress={() => router.push('/sign-in')} />}
-      {user && <Button variant="outline" label="Вийти" onPress={signOut} />}
 
-      {isParent && children && children.length > 0 && (
+      {user && (
+        <>
+          <View style={styles.tiles}>
+            <Tile value={String(progress?.[0] && !isParent ? progress[0].stats.streak : learn.sessions.length)} label={!isParent && progress?.[0] ? 'днів поспіль' : 'сесій фокусу'} />
+            <Tile value={`${minutesToday(learn)} хв`} label="сьогодні" />
+            <Tile value={quizAccuracy(learn) === null ? '—' : `${Math.round(quizAccuracy(learn)! * 100)}%`} label="успішність квізів" />
+          </View>
+          <View style={styles.menu}>
+            <MenuRow icon="checkbox-outline" label="Мої задачі" badge={learn.tasks.filter((t) => !t.done).length} onPress={() => router.push('/today')} />
+            <MenuRow icon="timer-outline" label="Таймер навчання" onPress={() => router.push('/timer')} />
+            <MenuRow icon="help-circle-outline" label="Квізи та самоперевірка" onPress={() => router.push('/today')} />
+            <MenuRow icon="stats-chart-outline" label="Статистика й прогноз" onPress={() => router.push('/analytics')} last />
+          </View>
+          <View style={styles.menu}>
+            <View style={styles.menuRow}>
+              <Ionicons name="notifications-outline" size={22} color={colors.primary} />
+              <Text style={styles.menuT}>Щоденне нагадування о {learn.settings.reminderHour}:00</Text>
+              <Switch
+                accessibilityLabel="Щоденне нагадування"
+                value={learn.settings.reminderOn}
+                trackColor={{ true: colors.primary }}
+                onValueChange={async (on) => {
+                  if (on && !(await requestPermission())) {
+                    Alert.alert('Сповіщення вимкнені', 'Дозвольте сповіщення в налаштуваннях телефону.');
+                    return;
+                  }
+                  study.setSettings({ reminderOn: on });
+                }}
+              />
+            </View>
+          </View>
+        </>
+      )}
+
+      {user && progress && user.role === 'student' && progress[0] && (
+        <>
+          <Text style={sectionTitle}>Твій прогрес</Text>
+          <StatsCard stats={progress[0].stats} />
+        </>
+      )}
+
+      {isParent && progress && (
+        <>
+          <Text style={sectionTitle}>Прогрес дітей</Text>
+          {progress.length === 0 && (
+            <Text style={styles.p}>Додайте профіль дитини на сайті — тут зʼявиться її прогрес.</Text>
+          )}
+          {progress.map((c) => (
+            <View key={c.id} style={styles.child}>
+              <Text style={styles.childName}>{c.name}</Text>
+              <StatsCard stats={c.stats} />
+              <ChildReport child={c} />
+            </View>
+          ))}
+        </>
+      )}
+
+      {user && <Button variant="outline" label="Вийти" onPress={() => {
+          clearCache();
+          signOut();
+        }} />}
+
+      {isParent && progress && progress.length > 0 && (
         <>
           <Text style={sectionTitle}>Діти</Text>
-          {children.map((c) => (
+          {progress.map((c) => (
             <View key={c.id} style={styles.row}>
               <Text style={styles.rowText}>{c.name}</Text>
               <Pressable
@@ -129,7 +199,42 @@ export default function Profile() {
   );
 }
 
+function Tile({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.tile}>
+      <Text style={styles.tileV}>{value}</Text>
+      <Text style={styles.tileL}>{label}</Text>
+    </View>
+  );
+}
+
+function MenuRow({ icon, label, badge, onPress, last }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string; badge?: number; onPress: () => void; last?: boolean }) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.menuRow, !last && styles.menuDivider]}>
+      <Ionicons name={icon} size={22} color={colors.primary} />
+      <Text style={styles.menuT}>{label}</Text>
+      {!!badge && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeT}>{badge}</Text>
+        </View>
+      )}
+      <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  initial: { fontSize: 36, fontFamily: fonts.black, color: colors.primary },
+  tiles: { flexDirection: 'row', gap: 10 },
+  tile: { flex: 1, backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingVertical: 14, paddingHorizontal: 6, alignItems: 'center', gap: 2 },
+  tileV: { fontSize: 20, fontFamily: fonts.black, color: colors.text },
+  tileL: { fontSize: 11, fontFamily: fonts.regular, color: colors.muted, textAlign: 'center' },
+  menu: { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, overflow: 'hidden' },
+  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, minHeight: 56 },
+  menuDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  menuT: { flex: 1, fontSize: 15, fontFamily: fonts.semibold, color: colors.text },
+  badge: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  badgeT: { fontSize: 12, fontFamily: fonts.bold, color: colors.onPrimary },
   head: { alignItems: 'center', gap: 6, paddingVertical: 12 },
   avatar: {
     width: 88,
@@ -142,6 +247,8 @@ const styles = StyleSheet.create({
   },
   h: { color: colors.text, fontSize: 20, fontFamily: fonts.bold },
   p: { color: colors.muted, fontFamily: fonts.regular, textAlign: 'center' },
+  child: { gap: 10 },
+  childName: { fontSize: 16, fontFamily: fonts.bold, color: colors.primary },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

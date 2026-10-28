@@ -12,11 +12,13 @@ import { openDoc } from '@/lib/docs';
 import { colors, fonts, radius } from '@/theme';
 
 type Mode = 'login' | 'register';
+type PendingRegister = { name: string; email: string; password: string; ageConfirm: boolean };
 
 // Вхід — модальний екран: гість спокійно переглядає каталог і потрапляє сюди, лише коли хоче вчитися.
 export default function SignIn() {
   const auth = useAuth();
   const [mode, setMode] = useState<Mode>('login');
+  const [pending, setPending] = useState<PendingRegister | null>(null);
   const [signup, setSignup] = useState<SignupRequired | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +65,13 @@ export default function SignIn() {
           <View style={styles.logo}>
             <Ionicons name="school" size={30} color={colors.primary} />
           </View>
-          <Text style={styles.title}>{signup ? 'Майже готово' : mode === 'login' ? 'Увійдіть, щоб вчитися' : 'Створіть акаунт'}</Text>
+          <Text style={styles.title}>{pending ? 'Підтвердіть пошту' : signup ? 'Майже готово' : mode === 'login' ? 'Увійдіть, щоб вчитися' : 'Створіть акаунт'}</Text>
           <Text style={styles.sub}>
-            {signup ? 'Розкажіть, хто ви, щоб ми підготували кабінет.' : 'Прогрес, домашки та доступ до уроків зберігаються в акаунті.'}
+            {pending
+              ? `Надіслали код на ${pending.email}. Введіть його, щоб створити акаунт.`
+              : signup
+                ? 'Розкажіть, хто ви, щоб ми підготували кабінет.'
+                : 'Прогрес, домашки та доступ до уроків зберігаються в акаунті.'}
           </Text>
         </View>
 
@@ -75,7 +81,14 @@ export default function SignIn() {
           </View>
         )}
 
-        {signup ? (
+        {pending ? (
+          <CodeForm
+            busy={busy}
+            onSubmit={(code) => run(async () => { await auth.register({ ...pending, code }); done(); })}
+            onResend={() => run(async () => { await auth.requestRegisterCode(pending); })}
+            onEdit={() => { setPending(null); setError(null); }}
+          />
+        ) : signup ? (
           <SignupForm signup={signup} initialYear={gateYear} busy={busy} onSubmit={(input) => run(async () => { await auth.completeSignup({ signupToken: signup.signupToken, ...input }); done(); })} />
         ) : (
           <>
@@ -90,7 +103,7 @@ export default function SignIn() {
             {mode === 'login' ? (
               <LoginForm busy={busy} onSubmit={(login, password) => run(async () => { await auth.signIn(login, password); done(); })} />
             ) : (
-              <RegisterForm busy={busy} onSubmit={(input) => run(async () => { await auth.register(input); done(); })} />
+              <RegisterForm busy={busy} onSubmit={(input) => run(async () => { await auth.requestRegisterCode(input); setPending(input); })} />
             )}
 
             <View style={styles.divider}>
@@ -149,7 +162,29 @@ function LoginForm({ busy, onSubmit }: { busy: boolean; onSubmit: (login: string
   );
 }
 
-function RegisterForm({ busy, onSubmit }: { busy: boolean; onSubmit: (i: { name: string; email: string; password: string; ageConfirm: boolean }) => void }) {
+function CodeForm({ busy, onSubmit, onResend, onEdit }: { busy: boolean; onSubmit: (code: string) => void; onResend: () => void; onEdit: () => void }) {
+  const [code, setCode] = useState('');
+  return (
+    <View style={styles.form}>
+      <Field
+        label="Код із листа"
+        value={code}
+        onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+        keyboardType="number-pad"
+        textContentType="oneTimeCode"
+        autoComplete="one-time-code"
+        maxLength={6}
+      />
+      <Button label="Підтвердити" loading={busy} disabled={code.length !== 6} onPress={() => onSubmit(code)} />
+      <Button variant="outline" label="Надіслати код ще раз" disabled={busy} onPress={onResend} />
+      <Pressable accessibilityRole="button" onPress={onEdit} style={styles.backLink}>
+        <Text style={styles.docLink}>Змінити дані</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function RegisterForm({ busy, onSubmit }: { busy: boolean; onSubmit: (i: PendingRegister) => void }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -255,6 +290,7 @@ const styles = StyleSheet.create({
   form: { gap: 14 },
   warn: { color: colors.warm },
   docLink: { color: colors.text, textDecorationLine: 'underline' },
+  backLink: { alignItems: 'center', minHeight: 44, justifyContent: 'center' },
   note: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 19 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   line: { flex: 1, height: 1, backgroundColor: colors.border },

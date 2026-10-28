@@ -23,6 +23,9 @@ export type Course = {
 
 export type Role = 'parent' | 'student';
 
+/** Лист із кодом надіслано. Акаунта ще немає — він з'явиться після введення коду. */
+export type RegisterCodeSent = { ok: true };
+
 export type User = {
   id: string;
   name: string;
