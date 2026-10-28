@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Robot } from '@/components/Robot';
+import { useReducedMotion } from '@/components/useReducedMotion';
 import type { Lesson } from '@/lib/types';
 import { colors, fonts, light, radius } from '@/theme';
 
@@ -18,7 +19,7 @@ const LOCK_HINT: Record<Lesson['access'], string | null> = {
   ok: null,
   coming_soon: 'Скоро',
   locked_sequence: 'Відкриється після попереднього уроку',
-  needs_subscription: 'Потрібна підписка (оформлюють батьки на сайті)',
+  needs_subscription: 'Потрібна підписка (оформлюють батьки)',
   login_required: 'Увійдіть, щоб почати',
   student_only: 'Уроки проходить дитина зі свого акаунта',
 };
@@ -30,6 +31,7 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
   const [width, setWidth] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [pulse] = useState(() => new Animated.Value(0));
+  const reduced = useReducedMotion();
 
   const current = lessons.findIndex((l) => !l.done && l.access === 'ok');
   const doneCount = lessons.filter((l) => l.done).length;
@@ -38,6 +40,10 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
   const happy = doneCount > 0;
 
   useEffect(() => {
+    if (reduced) {
+      pulse.setValue(0);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: 1100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
@@ -46,7 +52,7 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
     );
     loop.start();
     return () => loop.stop();
-  }, [pulse]);
+  }, [pulse, reduced]);
 
   const cx = (i: number) => width / 2 + OFFSETS[i % OFFSETS.length];
   const cy = (i: number) => i * ROW + ROW / 2 + NODE / 2 - 4;
@@ -79,7 +85,7 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
                 <Path
                   key={l.order}
                   d={seg(i)}
-                  stroke={l.done ? light.accent : 'rgba(255,255,255,0.65)'}
+                  stroke={l.done ? light.accent : 'rgba(255,255,255,0.7)'}
                   strokeWidth={l.done ? 8 : 6}
                   strokeLinecap="round"
                   strokeDasharray={l.done ? undefined : '2 14'}
@@ -121,11 +127,11 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
                       <Ionicons
                         name={l.done ? 'checkmark' : open ? TYPE_ICON[l.type] : 'lock-closed'}
                         size={l.done ? 34 : 28}
-                        color={state === 'locked' ? 'rgba(255,255,255,0.9)' : state === 'current' ? colors.onPrimary : '#fff'}
+                        color={state === 'done' ? '#0E7A4D' : state === 'current' ? colors.onPrimary : '#FFFFFF'}
                       />
                     </View>
                   </Pressable>
-                  <Text style={[styles.num, { left: cx(i) - 40, top: top + NODE + 10 }]} numberOfLines={1}>
+                  <Text style={[styles.num, { left: cx(i) - 52, top: top + NODE + 12 }]} numberOfLines={1}>
                     {l.order}. {l.title}
                   </Text>
                 </View>
@@ -156,14 +162,14 @@ function LessonCard({ lesson: l }: { lesson: Lesson }) {
 const nodeOf = StyleSheet.create({
   done: { backgroundColor: light.accent },
   current: { backgroundColor: colors.primary, borderWidth: 4, borderColor: 'rgba(255,255,255,0.55)' },
-  open: { backgroundColor: '#7C6CF2' },
-  locked: { backgroundColor: 'rgba(255,255,255,0.4)' },
+  open: { backgroundColor: '#7C6CF2', borderWidth: 3, borderColor: 'rgba(255,255,255,0.9)' },
+  locked: { backgroundColor: 'rgba(30,20,110,0.55)', borderWidth: 3, borderColor: 'rgba(255,255,255,0.7)' },
 });
 const shadowOf = StyleSheet.create({
   done: { backgroundColor: GREEN_EDGE },
   current: { backgroundColor: '#CFCBFF' },
   open: { backgroundColor: '#27369E' },
-  locked: { backgroundColor: 'rgba(120,110,200,0.35)' },
+  locked: { backgroundColor: 'rgba(20,12,80,0.5)' },
 });
 
 const styles = StyleSheet.create({
@@ -180,7 +186,7 @@ const styles = StyleSheet.create({
   start: { position: 'absolute', width: 68, alignItems: 'center' },
   startT: { overflow: 'hidden', borderRadius: 10, backgroundColor: colors.onPrimary, color: '#fff', fontFamily: fonts.black, fontSize: 12, paddingHorizontal: 12, paddingVertical: 4 },
   startTail: { width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderTopWidth: 7, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.onPrimary },
-  num: { position: 'absolute', width: 80, textAlign: 'center', fontFamily: fonts.semibold, fontSize: 10, color: light.muted },
+  num: { position: 'absolute', width: 104, textAlign: 'center', overflow: 'hidden', borderRadius: 10, paddingVertical: 2, backgroundColor: 'rgba(30,20,110,0.45)', fontFamily: fonts.semibold, fontSize: 12, color: '#FFFFFF' },
   card: { backgroundColor: light.card, borderWidth: 1, borderColor: light.border, borderRadius: radius.md, padding: 14, gap: 4, marginTop: 4 },
   cardT: { fontFamily: fonts.bold, fontSize: 15, color: light.text },
   cardP: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 19, color: light.muted },

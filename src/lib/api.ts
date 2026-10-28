@@ -1,6 +1,6 @@
 import { courseImages } from '@/data/courseImages';
 import { mockCourses } from '@/data/mock';
-import { readCache, writeCache } from '@/lib/cache';
+import { ownedKey, readCache, writeCache } from '@/lib/cache';
 import { ApiError, apiRequest } from '@/lib/http';
 import type { Course, CourseDetail, IconName, Lesson, GradientName, StudentProgress } from './types';
 
@@ -65,32 +65,71 @@ const toDetail = (res: { course: ApiCourse; lessons: Lesson[] }): CourseDetail =
 
 /** Курс і його теми. Якщо користувач увійшов, уроки приходять із його станом доступу. */
 export async function getCourseDetail(slug: string): Promise<CourseDetail | null> {
+  // Ключ береться до запиту: якщо під час очікування користувач увійде чи вийде, відповідь не потрапить у чужий кеш
+  const cacheKey = ownedKey(`course.${slug}`);
   try {
     const res = await apiRequest<{ course: ApiCourse; lessons: Lesson[] }>(`/courses/${encodeURIComponent(slug)}`, {
       auth: 'optional',
     });
-    writeCache(`course.${slug}`, res);
+    writeCache(cacheKey, res);
     return toDetail(res);
   } catch (e) {
     if (!(e instanceof ApiError && e.code === 'network')) return null;
-    const cached = await readCache<{ course: ApiCourse; lessons: Lesson[] }>(`course.${slug}`);
+    const cached = await readCache<{ course: ApiCourse; lessons: Lesson[] }>(cacheKey);
     return cached ? toDetail(cached) : null;
   }
 }
 
-/** Статистика: дитина отримує себе, батьки — кожну свою дитину. null — гість або немає звʼязку. */
+/** Статистика (без кешу: у ній імена дітей): дитина отримує себе, батьки — кожну свою дитину. null — гість або немає звʼязку. */
 export async function getStats(): Promise<StudentProgress[] | null> {
   try {
     const { students } = await apiRequest<{ students: StudentProgress[] }>('/stats', { auth: 'required' });
-    writeCache('stats', students);
     return students;
-  } catch (e) {
-    // Лише коли немає інтернету: помилки доступу (гість, сесію скасовано) кеш не обходить
-    return e instanceof ApiError && e.code === 'network' ? readCache<StudentProgress[]>('stats') : null;
+  } catch {
+    // Статистика містить імена дітей — на пристрої її не кешуємо
+    return null;
   }
 }
 
 /** Батьки видаляють профіль своєї дитини (прогрес і домашки — назавжди). */
 export async function deleteChild(id: string): Promise<void> {
   await apiRequest(`/children/${encodeURIComponent(id)}/delete`, { method: 'POST', body: { confirm: true }, auth: 'required' });
+}
+
+export type IapVerifyInput = { childId: string; productId: string; platform: 'apple' | 'google'; token: string; transactionId: string };
+
+export type IapGranted = { id: string; plan: 'basic' | 'standard' | 'premium'; slot: number | null; status: string; endsAt: string | null; needsCourse: boolean };
+
+/** Передає квитанцію покупки серверу: він перевіряє її в Apple/Google і створює підписку дитини. */
+export async function verifyIapPurchase(input: IapVerifyInput): Promise<IapGranted> {
+  const { subscription } = await apiRequest<{ subscription: IapGranted }>('/billing/iap/verify', { method: 'POST', body: input, auth: 'required' });
+  return subscription;
+}
+
+export type MobileSubscription = {
+  id: string;
+  childId: string | null;
+  plan: 'basic' | 'standard' | 'premium';
+  provider: 'wayforpay' | 'apple' | 'google';
+  slot: number | null;
+  status: 'active' | 'past_due' | 'canceled';
+  endsAt: string | null;
+  courseSlug: string | null;
+  /** Тариф «1 курс на вибір», курс ще не обрано. */
+  needsCourse: boolean;
+};
+
+/** Підписки батьків (з сайту й зі магазинів). Порожньо, якщо немає звʼязку. */
+export async function getSubscriptions(): Promise<MobileSubscription[]> {
+  try {
+    const { subscriptions } = await apiRequest<{ subscriptions: MobileSubscription[] }>('/subscriptions', { auth: 'required' });
+    return subscriptions;
+  } catch {
+    return [];
+  }
+}
+
+/** Обирає курс для підписки «1 курс на вибір». Робиться один раз; помилку сервера (напр. курс лише для Преміуму) кидає далі. */
+export async function chooseSubscriptionCourse(subscriptionId: string, courseSlug: string): Promise<void> {
+  await apiRequest(`/subscriptions/${encodeURIComponent(subscriptionId)}/course`, { method: 'POST', body: { courseSlug }, auth: 'required' });
 }

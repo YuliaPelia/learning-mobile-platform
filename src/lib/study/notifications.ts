@@ -42,7 +42,7 @@ async function schedule(title: string, body: string, trigger: Notifications.Noti
 export async function scheduleTimerEnd(seconds: number, focus: boolean) {
   if (!(await requestPermission())) return null;
   return schedule(
-    focus ? 'Фокус завершено 🎉' : 'Перерва скінчилась',
+    focus ? 'Фокус завершено' : 'Перерва скінчилась',
     focus ? 'Відпочиньте кілька хвилин.' : 'Повертаймось до навчання!',
     { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: Math.max(1, Math.round(seconds)), channelId: CHANNEL },
   );
@@ -58,7 +58,14 @@ const REMINDER_ID = 'study-reminder';
  * Нагадування «ще не навчались сьогодні»: якщо сьогодні вже вчились або година минула — на завтра.
  * Перепланується при кожній зміні даних, тож після навчання сьогоднішнє не спрацює.
  */
-export async function syncReminder(s: StudyState) {
+let chain: Promise<void> = Promise.resolve();
+/** Виклики йдуть по черзі, щоб «вимкнено» не перекрилось запізнілим «увімкнено». */
+export function syncReminder(s: StudyState): Promise<void> {
+  chain = chain.then(() => run(s));
+  return chain;
+}
+
+async function run(s: StudyState) {
   try {
     await Notifications.cancelScheduledNotificationAsync(REMINDER_ID).catch(() => {});
     if (!s.settings.reminderOn) return;
@@ -68,7 +75,7 @@ export async function syncReminder(s: StudyState) {
     await ensureChannel();
     await Notifications.scheduleNotificationAsync({
       identifier: REMINDER_ID,
-      content: { title: 'Час вчитись 🚀', body: 'Навіть 10 хвилин сьогодні тримають серію.' },
+      content: { title: 'Час для навчання', body: 'Кілька хвилин сьогодні — і ти ближче до мети.' },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: when, channelId: CHANNEL },
     });
   } catch {

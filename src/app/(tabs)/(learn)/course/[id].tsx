@@ -99,9 +99,9 @@ function StartBlock({ role, freeLessons }: { role: 'parent' | 'student' | null; 
     );
   }
   if (role === 'parent') {
-    return <Note icon="people-outline" text="Уроки проходить дитина зі свого акаунта. Підписка й оплата доступні на сайті itcodecraft.tech." />;
+    return <Note icon="people-outline" text="Уроки проходить дитина зі свого акаунта. Підписку оформлюють батьки." />;
   }
-  return <Note icon="checkmark-circle-outline" text={`Перші ${freeLessons} уроки безкоштовні. Закриті теми відкриються з підпискою, яку оформлюють батьки на сайті.`} />;
+  return <Note icon="checkmark-circle-outline" text={`Перші ${freeLessons} уроки безкоштовні. Закриті теми відкриються з підпискою, яку оформлюють батьки.`} />;
 }
 
 function Note({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string }) {

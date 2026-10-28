@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { ChildReport } from '@/components/ChildReport';
+import { useParentalGate } from '@/components/ParentalGate';
 import { Screen, sectionTitle } from '@/components/Screen';
 import { StatsCard } from '@/components/StatsCard';
 import { useAsync } from '@/components/useAsync';
 import { deleteChild, getStats } from '@/lib/api';
 import { useAuth } from '@/lib/auth/AuthProvider';
-import { clearCache } from '@/lib/cache';
 import { openDoc } from '@/lib/docs';
+import { IAP_ENABLED } from '@/lib/iap/service';
 import { requestPermission } from '@/lib/study/notifications';
 import { minutesToday, quizAccuracy } from '@/lib/study/metrics';
 import { study, useStudy } from '@/lib/study/store';
@@ -24,6 +25,7 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const isParent = user?.role === 'parent';
   const learn = useStudy();
+  const gate = useParentalGate();
   const progress = useAsync(() => (user ? getStats() : Promise.resolve(null)), null, [user?.id, reload]);
 
   const confirmDeleteAccount = () =>
@@ -40,9 +42,10 @@ export default function Profile() {
           onPress: async () => {
             setBusy(true);
             try {
+              const ownerId = user?.id;
               await deleteAccount();
-              study.reset();
-              clearCache();
+              // Після видалення сесія зникає і власник стає гостем, тож стираємо за збереженим id
+              if (ownerId) study.wipe(ownerId);
               Alert.alert('Акаунт видалено', 'Дякуємо, що були з нами.');
             } catch (e) {
               Alert.alert('Не вдалося видалити', errorText(e));
@@ -54,6 +57,16 @@ export default function Profile() {
       ],
     );
 
+  // Задачі, таймер і квізи поки що лише на пристрої: після виходу вони стираються (див. docs/ROADMAP.md)
+  const hasLocalData = learn.tasks.length + learn.sessions.length + learn.quizResults.length > 0;
+  const confirmSignOut = () => {
+    if (!hasLocalData) return signOut();
+    Alert.alert('Вийти з акаунта?', 'Задачі, сесії таймера й результати квізів на цьому пристрої буде видалено — вони ще не синхронізуються з сервером.', [
+      { text: 'Скасувати', style: 'cancel' },
+      { text: 'Вийти й видалити', style: 'destructive', onPress: signOut },
+    ]);
+  };
+
   const confirmDeleteChild = (id: string, name: string) =>
     Alert.alert(`Видалити профіль «${name}»?`, 'Прогрес і домашки буде видалено назавжди, підписки дитини — скасовано.', [
       { text: 'Скасувати', style: 'cancel' },
@@ -63,6 +76,7 @@ export default function Profile() {
         onPress: async () => {
           try {
             await deleteChild(id);
+            study.removeChildGoal(id);
             setReload((n) => n + 1);
           } catch (e) {
             Alert.alert('Не вдалося видалити', errorText(e));
@@ -73,6 +87,7 @@ export default function Profile() {
 
   return (
     <Screen title="Профіль">
+      {gate.element}
       <View style={styles.head}>
         <View style={styles.avatar}>
           {user ? <Text style={styles.initial}>{user.name[0]?.toUpperCase()}</Text> : <Ionicons name="person" size={40} color={colors.primary} />}
@@ -103,7 +118,8 @@ export default function Profile() {
             <MenuRow icon="checkbox-outline" label="Мої задачі" badge={learn.tasks.filter((t) => !t.done).length} onPress={() => router.push('/today')} />
             <MenuRow icon="timer-outline" label="Таймер навчання" onPress={() => router.push('/timer')} />
             <MenuRow icon="help-circle-outline" label="Квізи та самоперевірка" onPress={() => router.push('/today')} />
-            <MenuRow icon="stats-chart-outline" label="Статистика й прогноз" onPress={() => router.push('/analytics')} last />
+            <MenuRow icon="stats-chart-outline" label="Статистика й прогноз" onPress={() => router.push('/analytics')} last={!(IAP_ENABLED && isParent)} />
+            {IAP_ENABLED && isParent && <MenuRow icon="card-outline" label="Тарифи й підписка" onPress={() => router.push('/plans')} last />}
           </View>
           <View style={styles.menu}>
             <View style={styles.menuRow}>
@@ -149,10 +165,7 @@ export default function Profile() {
         </>
       )}
 
-      {user && <Button variant="outline" label="Вийти" onPress={() => {
-          clearCache();
-          signOut();
-        }} />}
+      {user && <Button variant="outline" label="Вийти" onPress={confirmSignOut} />}
 
       {isParent && progress && progress.length > 0 && (
         <>
@@ -175,14 +188,14 @@ export default function Profile() {
 
       <View style={styles.note}>
         <Ionicons name="information-circle-outline" size={22} color={colors.primary} />
-        <Text style={styles.noteT}>Керування підпискою та оплатою доступне лише на сайті itcodecraft.tech.</Text>
+        <Text style={styles.noteT}>Підпискою керують батьки зі свого акаунта.</Text>
       </View>
 
       <View style={styles.links}>
-        <Pressable accessibilityRole="link" onPress={() => openDoc('privacy')} hitSlop={8}>
+        <Pressable accessibilityRole="link" onPress={() => gate.ask(() => openDoc('privacy'))} hitSlop={8} style={styles.linkHit}>
           <Text style={styles.link}>Політика конфіденційності</Text>
         </Pressable>
-        <Pressable accessibilityRole="link" onPress={() => openDoc('terms')} hitSlop={8}>
+        <Pressable accessibilityRole="link" onPress={() => gate.ask(() => openDoc('terms'))} hitSlop={8} style={styles.linkHit}>
           <Text style={styles.link}>Правила користування</Text>
         </Pressable>
       </View>
@@ -264,6 +277,7 @@ const styles = StyleSheet.create({
   note: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', backgroundColor: colors.card, borderRadius: radius.md, padding: 16, borderWidth: 1, borderColor: colors.border },
   noteT: { flex: 1, fontFamily: fonts.regular, color: colors.muted, lineHeight: 20 },
   links: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 20, rowGap: 8 },
+  linkHit: { minHeight: 44, justifyContent: 'center' },
   link: { fontSize: 13, fontFamily: fonts.semibold, color: colors.text, textDecorationLine: 'underline' },
   small: { fontSize: 12, fontFamily: fonts.regular, color: colors.muted, textAlign: 'center' },
   deleteBtn: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },

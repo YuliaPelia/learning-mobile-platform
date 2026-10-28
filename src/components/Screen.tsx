@@ -39,9 +39,9 @@ export const sectionTitle = StyleSheet.create({
 const styles = StyleSheet.create({
   bg: { flex: 1 },
   // м'які світлові плями, як на референсі
-  glow: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.16)' },
+  glow: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.03)' },
   glowA: { width: 320, height: 320, top: -80, right: -120 },
-  glowB: { width: 260, height: 260, bottom: 160, left: -140, backgroundColor: 'rgba(196,170,255,0.22)' },
+  glowB: { width: 260, height: 260, bottom: 160, left: -140, backgroundColor: 'rgba(196,170,255,0.05)' },
   content: { paddingHorizontal: 20, paddingBottom: 120, gap: 18 },
   back: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 32, fontFamily: fonts.black, color: colors.text },

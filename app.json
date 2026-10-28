@@ -38,7 +38,9 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.733888533837-2cf0r3dl4lhveduh7mdl7utp0oqj1m7i"
         }
-      ]
+      ],
+      "expo-status-bar",
+      "expo-iap"
     ],
     "scheme": "itcodecraft",
     "experiments": {

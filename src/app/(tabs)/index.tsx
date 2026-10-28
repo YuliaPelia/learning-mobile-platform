@@ -10,8 +10,7 @@ import { useAsync } from '@/components/useAsync';
 import { getCourses, getStats } from '@/lib/api';
 import { useAuth } from '@/lib/auth/AuthProvider';
 import type { Course, StudentProgress, User } from '@/lib/types';
-import { mockCourses } from '@/data/mock';
-import { colors, fonts, light, radius, shadow } from '@/theme';
+import { colors, fonts, radius, shadow } from '@/theme';
 
 const openCourse = (id: string) => router.push({ pathname: '/course/[id]', params: { id } });
 
@@ -20,7 +19,7 @@ const PLANET = 128;
 
 export default function Home() {
   const { user } = useAuth();
-  const courses = useAsync(getCourses, mockCourses);
+  const courses = useAsync<Course[]>(getCourses, []);
   const students = useAsync(() => (user ? getStats() : Promise.resolve(null)), null, [user?.id]);
   const firstName = user?.name.split(' ')[0];
 
@@ -188,7 +187,7 @@ const styles = StyleSheet.create({
     color: colors.inkFaint,
   },
   cardTitle: { fontSize: 24, lineHeight: 30, fontFamily: fonts.bold, color: colors.ink },
-  cardMeta: { fontSize: 12, fontFamily: fonts.semibold, color: light.accent },
+  cardMeta: { fontSize: 12, fontFamily: fonts.semibold, color: '#0E7A4D' },
   cardDesc: { fontSize: 13, lineHeight: 20, fontFamily: fonts.regular, color: colors.inkMuted },
   go: {
     position: 'absolute',

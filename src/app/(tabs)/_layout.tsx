@@ -24,7 +24,7 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.text,
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.72)',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.92)',
         tabBarLabelStyle: { fontSize: 11, fontFamily: fonts.semibold },
         // Плаваюча матова панель над контентом (Screen залишає під неї відступ)
         tabBarStyle: {
@@ -43,7 +43,7 @@ export default function TabsLayout() {
         },
         tabBarItemStyle: { paddingTop: 6 },
         tabBarBackground: () => (
-          <BlurView intensity={45} tint="light" style={StyleSheet.absoluteFill}>
+          <BlurView intensity={45} tint="dark" style={StyleSheet.absoluteFill}>
             <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.tabBar }]} />
           </BlurView>
         ),
@@ -60,5 +60,5 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   iconPill: { width: 48, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  iconPillOn: { backgroundColor: 'rgba(255,255,255,0.36)' },
+  iconPillOn: { backgroundColor: 'rgba(255,255,255,0.3)' },
 });

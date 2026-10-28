@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
+import { useReducedMotion } from '@/components/useReducedMotion';
 import { fonts } from '@/theme';
 
 type Props = { size?: number; mood?: 'idle' | 'happy'; bounce?: boolean };
@@ -12,9 +13,14 @@ export function Robot({ size = 120, mood = 'idle', bounce = true }: Props) {
   const [y] = useState(() => new Animated.Value(0));
   const [tilt] = useState(() => new Animated.Value(0));
   const happy = mood === 'happy';
+  const reduced = useReducedMotion();
 
   useEffect(() => {
-    if (!bounce) return;
+    if (!bounce || reduced) {
+      y.setValue(0);
+      tilt.setValue(0);
+      return;
+    }
     const t = happy ? 380 : 1200;
     const loop = Animated.loop(
       Animated.parallel([
@@ -30,7 +36,7 @@ export function Robot({ size = 120, mood = 'idle', bounce = true }: Props) {
     );
     loop.start();
     return () => loop.stop();
-  }, [bounce, happy, y, tilt]);
+  }, [bounce, reduced, happy, y, tilt]);
 
   const rotate = tilt.interpolate({ inputRange: [0, 1], outputRange: happy ? ['-3deg', '3deg'] : ['-1deg', '1deg'] });
   const h = size * RATIO;

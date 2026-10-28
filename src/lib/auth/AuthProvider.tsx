@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { apiRequest, ApiError } from '@/lib/http';
 import type { RegisterCodeSent, User } from '@/lib/types';
 import { getRefreshToken, loadSession, onSessionChange, setSession, type TokenResponse } from './session';
-import type { SocialToken } from './social';
+import { googleSignOut, type SocialToken } from './social';
 
 type Status = 'loading' | 'guest' | 'authed';
 
@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Спершу очищаємо локально — вихід має спрацювати навіть без мережі
         await setSession(null);
         setState({ status: 'guest', user: null });
+        googleSignOut();
         if (refreshToken) await apiRequest('/auth/logout', { method: 'POST', body: { refreshToken } }).catch(() => {});
       },
     }),

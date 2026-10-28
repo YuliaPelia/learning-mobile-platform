@@ -76,6 +76,7 @@ function QuizScreen({ id }: { id: string }) {
           <Pressable
             key={o}
             accessibilityRole="button"
+            accessibilityLabel={right ? `${o}. Правильно` : wrong ? `${o}. Неправильно` : o}
             accessibilityState={{ disabled: answered }}
             disabled={answered}
             onPress={() => {

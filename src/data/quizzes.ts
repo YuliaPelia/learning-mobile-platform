@@ -1,7 +1,8 @@
 import type { Mistake, Quiz } from '@/lib/study/types';
 
 // Тестовий квіз для перевірки роботи екрана. Справжні квізи додаватимуть викладач і менеджер у БД.
-export const mockQuizzes: Quiz[] = [
+// У релізній збірці його немає, щоб користувачі не бачили чернетку.
+const testQuizzes: Quiz[] = [
   {
     id: 'test-basics',
     courseId: 'test',
@@ -41,6 +42,9 @@ export const mockQuizzes: Quiz[] = [
     ],
   },
 ];
+
+/** Квізи, доступні користувачу: у релізі — лише ті, що прийдуть з бекенду (поки порожньо). */
+export const mockQuizzes: Quiz[] = __DEV__ ? testQuizzes : [];
 
 export const getQuiz = (id: string) => mockQuizzes.find((q) => q.id === id);
 

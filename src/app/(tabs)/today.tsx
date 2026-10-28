@@ -93,18 +93,18 @@ export default function Today() {
             accessibilityState={{ checked: t.done }}
             accessibilityLabel={t.title}
             onPress={() => study.toggleTask(t.id)}
-            hitSlop={8}>
+            hitSlop={12}>
             <Ionicons name={t.done ? 'checkbox' : 'square-outline'} size={24} color={t.done ? colors.success : colors.primary} />
           </Pressable>
           <Text style={[styles.taskT, styles.taskBody, t.done && styles.struck]}>{t.title}</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel={`Видалити ${t.title}`} onPress={() => study.removeTask(t.id)} hitSlop={8}>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Видалити ${t.title}`} onPress={() => study.removeTask(t.id)} hitSlop={16}>
             <Ionicons name="close" size={18} color={colors.muted} />
           </Pressable>
         </View>
       ))}
       {total === 0 && <Text style={styles.muted}>Задач ще немає — додайте першу або почніть урок.</Text>}
 
-      <Text style={sectionTitle}>Самоперевірка</Text>
+      {(mockQuizzes.length > 0 || dueReview > 0) && <Text style={sectionTitle}>Самоперевірка</Text>}
       {dueReview > 0 && (
         <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/quiz/[id]', params: { id: 'review' } })} style={[styles.task, styles.review]}>
           <Ionicons name="refresh-circle-outline" size={24} color={colors.primary} />

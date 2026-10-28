@@ -8,6 +8,7 @@ import { Field } from '@/components/Field';
 import { ApiError, useAuth, type SignupRequired } from '@/lib/auth/AuthProvider';
 import { appleToken, appleAvailable, googleToken, type SocialToken } from '@/lib/auth/social';
 import { readAgeGate, writeAgeGate, type AgeGate } from '@/lib/auth/storage';
+import { useParentalGate } from '@/components/ParentalGate';
 import { openDoc } from '@/lib/docs';
 import { colors, fonts, radius } from '@/theme';
 
@@ -17,6 +18,7 @@ type PendingRegister = { name: string; email: string; password: string; ageConfi
 // Вхід — модальний екран: гість спокійно переглядає каталог і потрапляє сюди, лише коли хоче вчитися.
 export default function SignIn() {
   const auth = useAuth();
+  const parental = useParentalGate();
   const [mode, setMode] = useState<Mode>('login');
   const [pending, setPending] = useState<PendingRegister | null>(null);
   const [signup, setSignup] = useState<SignupRequired | null>(null);
@@ -143,9 +145,10 @@ export default function SignIn() {
         )}
         <Text style={styles.hint}>
           Продовжуючи, ви погоджуєтеся з{' '}
-          <Text accessibilityRole="link" style={styles.docLink} onPress={() => openDoc('terms')}>Правилами користування</Text> і{' '}
-          <Text accessibilityRole="link" style={styles.docLink} onPress={() => openDoc('privacy')}>Політикою конфіденційності</Text>.
+          <Text accessibilityRole="link" style={styles.docLink} onPress={() => parental.ask(() => openDoc('terms'))}>Правилами користування</Text> і{' '}
+          <Text accessibilityRole="link" style={styles.docLink} onPress={() => parental.ask(() => openDoc('privacy'))}>Політикою конфіденційності</Text>.
         </Text>
+        {parental.element}
     </ScrollView>
   );
 }

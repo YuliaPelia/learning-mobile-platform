@@ -48,3 +48,13 @@ export async function googleToken(): Promise<SocialToken> {
   }
   return { provider: 'google', idToken: response.data.idToken };
 }
+
+/** Забирає Google-акаунт з пристрою, щоб наступна людина не бачила його у виборі. Без нативного модуля (Expo Go) нічого не робить. */
+export async function googleSignOut(): Promise<void> {
+  try {
+    const Google = await import('@react-native-google-signin/google-signin');
+    await Google.GoogleSignin.signOut();
+  } catch {
+    // не входили через Google або модуль недоступний
+  }
+}
