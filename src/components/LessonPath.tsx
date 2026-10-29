@@ -5,7 +5,8 @@ import Svg, { Path } from 'react-native-svg';
 import { Robot } from '@/components/Robot';
 import { useReducedMotion } from '@/components/useReducedMotion';
 import type { Lesson } from '@/lib/types';
-import { colors, fonts, light, radius } from '@/theme';
+import { colors, light } from '@/theme';
+import { makeStyles, useSkin } from '@/theme/skin';
 
 const NODE = 68;
 const ROW = 112;
@@ -64,16 +65,17 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
     return `M${cx(i)} ${cy(i)} C${cx(i)} ${midY} ${cx(i + 1)} ${midY} ${cx(i + 1)} ${cy(i + 1)}`;
   };
 
+  const pro = useSkin() === 'pro';
   const halo = { opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.55] }) }] };
 
   return (
     <View>
       <View style={styles.banner}>
-        <View style={styles.bannerBar} accessible accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: lessons.length, now: doneCount }}>
+        <View style={styles.bannerBar} accessible accessibilityRole="progressbar" accessibilityLabel="Прогрес курсу" accessibilityValue={{ min: 0, max: lessons.length, now: doneCount }}>
           <View style={[styles.bannerFill, { width: `${lessons.length ? (doneCount / lessons.length) * 100 : 0}%` }]} />
         </View>
         <Text style={styles.bannerT}>
-          {finished ? 'Курс пройдено! Робот у захваті 🎉' : doneCount > 0 ? `Пройдено ${doneCount} з ${lessons.length}. Так тримати!` : 'Робот готовий вирушати в дорогу'}
+          {pro ? (finished ? 'Курс пройдено' : `Пройдено ${doneCount} з ${lessons.length}`) : finished ? 'Курс пройдено! Робот у захваті 🎉' : doneCount > 0 ? `Пройдено ${doneCount} з ${lessons.length}. Так тримати!` : 'Робот готовий вирушати в дорогу'}
         </Text>
       </View>
 
@@ -86,9 +88,9 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
                   key={l.order}
                   d={seg(i)}
                   stroke={l.done ? light.accent : 'rgba(255,255,255,0.7)'}
-                  strokeWidth={l.done ? 8 : 6}
+                  strokeWidth={pro ? 3 : l.done ? 8 : 6}
                   strokeLinecap="round"
-                  strokeDasharray={l.done ? undefined : '2 14'}
+                  strokeDasharray={l.done ? undefined : pro ? '6 8' : '2 14'}
                   fill="none"
                 />
               ))}
@@ -102,7 +104,7 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
               const robotLeft = OFFSETS[i % OFFSETS.length] >= 0;
               return (
                 <View key={l.order}>
-                  {robotAt === i && (
+                  {!pro && robotAt === i && (
                     <View style={[styles.robot, { top: top - 40, left: robotLeft ? 0 : width - CAT }]} pointerEvents="none">
                       <Robot size={CAT} mood={happy ? 'happy' : 'idle'} />
                     </View>
@@ -118,12 +120,13 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
                   )}
                   <Pressable
                     accessibilityRole="button"
+                    accessibilityState={{ selected: selected === i, disabled: !open && !l.done }}
                     accessibilityLabel={`Урок ${l.order}. ${l.title}. ${l.done ? 'Пройдено' : open ? 'Доступний' : 'Закритий'}`}
                     onPress={() => setSelected(selected === i ? null : i)}
                     style={[styles.nodeWrap, { left, top }]}>
-                    <View style={[styles.shadow, shadowOf[state]]} />
-                    <View style={[styles.node, nodeOf[state]]}>
-                      <View style={styles.gloss} />
+                    {!pro && <View style={[styles.shadow, shadowOf[state]]} />}
+                    <View style={[styles.node, nodeOf[state], pro && styles.nodeFlat]}>
+                      {!pro && <View style={styles.gloss} />}
                       <Ionicons
                         name={l.done ? 'checkmark' : open ? TYPE_ICON[l.type] : 'lock-closed'}
                         size={l.done ? 34 : 28}
@@ -131,7 +134,7 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
                       />
                     </View>
                   </Pressable>
-                  <Text style={[styles.num, { left: cx(i) - 52, top: top + NODE + 12 }]} numberOfLines={1}>
+                  <Text style={[styles.num, { left: cx(i) - 52, top: top + NODE + 12 }]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
                     {l.order}. {l.title}
                   </Text>
                 </View>
@@ -141,7 +144,7 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
         )}
       </View>
 
-      {selected !== null && lessons[selected] && <LessonCard lesson={lessons[selected]} />}
+      {selected !== null && lessons[selected] && <View accessibilityLiveRegion="polite"><LessonCard lesson={lessons[selected]} /></View>}
     </View>
   );
 }
@@ -172,23 +175,26 @@ const shadowOf = StyleSheet.create({
   locked: { backgroundColor: 'rgba(20,12,80,0.5)' },
 });
 
-const styles = StyleSheet.create({
-  banner: { backgroundColor: light.card, borderWidth: 1, borderColor: light.border, borderRadius: radius.md, padding: 14, gap: 10, marginBottom: 8 },
-  bannerBar: { height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
-  bannerFill: { height: 10, borderRadius: 5, backgroundColor: light.accent },
-  bannerT: { fontFamily: fonts.bold, fontSize: 14, color: light.text, textAlign: 'center' },
-  robot: { position: 'absolute', width: CAT },
-  nodeWrap: { position: 'absolute', width: NODE, height: NODE + 8 },
-  node: { width: NODE, height: NODE, borderRadius: NODE / 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  shadow: { position: 'absolute', top: 8, width: NODE, height: NODE, borderRadius: NODE / 2 },
+const styles = makeStyles((t) => {
+  return StyleSheet.create({
+    banner: { backgroundColor: light.card, borderWidth: 1, borderColor: light.border, borderRadius: t.radius.md, padding: 14, gap: 10, marginBottom: 8 },
+    bannerBar: { height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
+    bannerFill: { height: 10, borderRadius: 5, backgroundColor: light.accent },
+    bannerT: { fontFamily: t.fonts.bold, fontSize: 15, color: light.text, textAlign: 'center' },
+    robot: { position: 'absolute', width: CAT },
+    nodeWrap: { position: 'absolute', width: NODE, height: NODE + 8 },
+    node: { width: NODE, height: NODE, borderRadius: NODE / 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+    shadow: { position: 'absolute', top: 8, width: NODE, height: NODE, borderRadius: NODE / 2 },
+    nodeFlat: { borderRadius: 16, borderWidth: 1.5 },
   gloss: { position: 'absolute', top: 6, left: 12, width: 26, height: 12, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.28)', transform: [{ rotate: '-20deg' }] },
-  halo: { position: 'absolute', width: NODE, height: NODE, borderRadius: NODE / 2, backgroundColor: colors.primary },
-  start: { position: 'absolute', width: 68, alignItems: 'center' },
-  startT: { overflow: 'hidden', borderRadius: 10, backgroundColor: colors.onPrimary, color: '#fff', fontFamily: fonts.black, fontSize: 12, paddingHorizontal: 12, paddingVertical: 4 },
-  startTail: { width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderTopWidth: 7, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.onPrimary },
-  num: { position: 'absolute', width: 104, textAlign: 'center', overflow: 'hidden', borderRadius: 10, paddingVertical: 2, backgroundColor: 'rgba(30,20,110,0.45)', fontFamily: fonts.semibold, fontSize: 12, color: '#FFFFFF' },
-  card: { backgroundColor: light.card, borderWidth: 1, borderColor: light.border, borderRadius: radius.md, padding: 14, gap: 4, marginTop: 4 },
-  cardT: { fontFamily: fonts.bold, fontSize: 15, color: light.text },
-  cardP: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 19, color: light.muted },
-  cardMeta: { fontFamily: fonts.semibold, fontSize: 12, color: light.accent },
+    halo: { position: 'absolute', width: NODE, height: NODE, borderRadius: NODE / 2, backgroundColor: colors.primary },
+    start: { position: 'absolute', width: 68, alignItems: 'center' },
+    startT: { overflow: 'hidden', borderRadius: 10, backgroundColor: colors.onPrimary, color: '#fff', fontFamily: t.fonts.black, fontSize: 12, paddingHorizontal: 12, paddingVertical: 4 },
+    startTail: { width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderTopWidth: 7, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.onPrimary },
+    num: { position: 'absolute', width: 104, textAlign: 'center', overflow: 'hidden', borderRadius: 10, paddingVertical: 2, backgroundColor: 'rgba(30,20,110,0.45)', fontFamily: t.fonts.semibold, fontSize: 12, color: '#FFFFFF' },
+    card: { backgroundColor: light.card, borderWidth: 1, borderColor: light.border, borderRadius: t.radius.md, padding: 14, gap: 4, marginTop: 4 },
+    cardT: { fontFamily: t.fonts.bold, fontSize: 15, color: light.text },
+    cardP: { fontFamily: t.fonts.regular, fontSize: 13, lineHeight: 19, color: light.muted },
+    cardMeta: { fontFamily: t.fonts.semibold, fontSize: 12, color: light.accent },
+  });
 });

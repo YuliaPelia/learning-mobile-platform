@@ -1,15 +1,13 @@
 import { StyleSheet, View } from 'react-native';
 import { dots } from '@/theme';
 
-// Фіксовані позиції (у % від екрана), щоб декор не «стрибав» між рендерами
+// Фіксовані позиції (у % від екрана), щоб декор не «стрибав» між рендерами. Планети лише по краях — не перекривають текст.
 const PLANETS = [
-  { top: 6, left: 82, size: 14, color: 0 },
-  { top: 10, left: 64, size: 10, color: 1 },
-  { top: 22, left: 6, size: 12, color: 2 },
-  { top: 34, left: 90, size: 9, color: 3 },
-  { top: 58, left: 4, size: 10, color: 1 },
-  { top: 72, left: 88, size: 16, color: 2 },
-  { top: 88, left: 10, size: 9, color: 0 },
+  { top: 8, left: 97, size: 14, color: 0 },
+  { top: 34, left: 98, size: 9, color: 3 },
+  { top: 58, left: 1, size: 10, color: 1 },
+  { top: 72, left: 97, size: 16, color: 2 },
+  { top: 88, left: 2, size: 9, color: 0 },
 ];
 const STARS = [
   [4, 30], [8, 12], [14, 48], [18, 92], [26, 40], [30, 70], [40, 16], [46, 58],

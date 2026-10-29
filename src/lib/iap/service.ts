@@ -60,7 +60,10 @@ export async function buyPlan(slot: Slot, plan: PlanId, childId: string): Promis
   const offerToken = product.subscriptionOffers?.[0]?.offerTokenAndroid ?? undefined;
 
   return new Promise<IapGranted>((resolve, reject) => {
+    // «Ask to Buy» чи обірвана оплата: подій може не бути. Не тримаємо екран зайнятим вічно — транзакцію підхопить Apple/Google при наступному запуску
+    const timer = setTimeout(() => done(() => reject(new PurchaseError('Очікуємо підтвердження покупки. Якщо платіж схвалено, підписка зʼявиться за кілька хвилин.'))), 120_000);
     const done = (fn: () => void) => {
+      clearTimeout(timer);
       updated.remove();
       failed.remove();
       fn();

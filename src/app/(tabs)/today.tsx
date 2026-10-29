@@ -2,17 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { MascotBubble } from '@/components/home/MascotBubble';
 import { Ring } from '@/components/Ring';
+import { success } from '@/lib/haptics';
 import { Screen, sectionTitle } from '@/components/Screen';
 import { mockQuizzes, reviewQuiz } from '@/data/quizzes';
 import { forecastCompletion, minutesToday, quizAccuracy } from '@/lib/study/metrics';
 import { study, useStudy } from '@/lib/study/store';
 import { useCourseProgress } from '@/lib/study/useCourseProgress';
-import { colors, fonts, radius } from '@/theme';
+import { colors } from '@/theme';
+import { useSkin, calm, makeStyles } from '@/theme/skin';
 
 const dateFmt = new Intl.DateTimeFormat('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
 
 export default function Today() {
+  useSkin(); // перерендер при зміні вигляду
   const s = useStudy();
   const course = useCourseProgress();
   const [draft, setDraft] = useState('');
@@ -43,18 +47,18 @@ export default function Today() {
           <Text style={styles.ringL}>хв</Text>
         </Ring>
         <View style={styles.cardBody}>
-          <Text style={styles.cardT}>{mins >= goal ? 'Ціль на день виконано!' : `Ціль: ${goal} хв навчання`}</Text>
+          <Text style={styles.cardT}>{calm(mins >= goal ? 'Ціль на день виконано!' : `Ціль: ${goal} хв навчання`)}</Text>
           <Text style={styles.muted}>
             {done.length} з {total} задач виконано
           </Text>
           <Pressable accessibilityRole="button" onPress={() => router.push('/timer')} style={styles.cta}>
-            <Ionicons name="timer-outline" size={18} color={colors.onPrimary} />
+            <Ionicons name="timer-outline" size={18} color={colors.onAction} />
             <Text style={styles.ctaT}>Таймер</Text>
           </Pressable>
         </View>
       </View>
 
-      <Text style={sectionTitle}>Мої задачі</Text>
+      <Text style={sectionTitle()}>Мої задачі</Text>
       <View style={styles.addRow}>
         <TextInput
           value={draft}
@@ -67,7 +71,7 @@ export default function Today() {
           style={styles.input}
         />
         <Pressable accessibilityRole="button" accessibilityLabel="Додати задачу" onPress={add} style={styles.addBtn}>
-          <Ionicons name="add" size={24} color={colors.onPrimary} />
+          <Ionicons name="add" size={24} color={colors.onAction} />
         </Pressable>
       </View>
 
@@ -92,7 +96,10 @@ export default function Today() {
             accessibilityRole="checkbox"
             accessibilityState={{ checked: t.done }}
             accessibilityLabel={t.title}
-            onPress={() => study.toggleTask(t.id)}
+            onPress={() => {
+              if (!t.done) success();
+              study.toggleTask(t.id);
+            }}
             hitSlop={12}>
             <Ionicons name={t.done ? 'checkbox' : 'square-outline'} size={24} color={t.done ? colors.success : colors.primary} />
           </Pressable>
@@ -102,9 +109,9 @@ export default function Today() {
           </Pressable>
         </View>
       ))}
-      {total === 0 && <Text style={styles.muted}>Задач ще немає — додайте першу або почніть урок.</Text>}
+      {total === 0 && <MascotBubble mood="think" text="Задач ще немає. Додайте першу або почніть урок — я підкажу, з чого почати!" />}
 
-      {(mockQuizzes.length > 0 || dueReview > 0) && <Text style={sectionTitle}>Самоперевірка</Text>}
+      {(mockQuizzes.length > 0 || dueReview > 0) && <Text style={sectionTitle()}>Самоперевірка</Text>}
       {dueReview > 0 && (
         <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/quiz/[id]', params: { id: 'review' } })} style={[styles.task, styles.review]}>
           <Ionicons name="refresh-circle-outline" size={24} color={colors.primary} />
@@ -145,24 +152,26 @@ export default function Today() {
   );
 }
 
-const glass = { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border } as const;
 
-const styles = StyleSheet.create({
-  date: { fontFamily: fonts.regular, color: colors.muted, textTransform: 'capitalize', marginTop: -10 },
-  card: { ...glass, flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: radius.lg, padding: 16 },
-  cardBody: { flex: 1, gap: 4 },
-  cardT: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  muted: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
-  ringV: { fontFamily: fonts.black, fontSize: 24, color: colors.text, lineHeight: 28 },
-  ringL: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
-  cta: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 6, backgroundColor: colors.primary, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
-  ctaT: { fontFamily: fonts.bold, fontSize: 13, color: colors.onPrimary },
-  addRow: { flexDirection: 'row', gap: 10 },
-  input: { ...glass, flex: 1, height: 48, borderRadius: radius.md, paddingHorizontal: 16, color: colors.text, fontFamily: fonts.regular },
-  addBtn: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  task: { ...glass, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: radius.md, padding: 14, minHeight: 56 },
-  taskBody: { flex: 1 },
-  taskT: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text },
-  review: { borderColor: colors.primary },
-  struck: { textDecorationLine: 'line-through', color: colors.muted },
+const styles = makeStyles((t) => {
+  const glass = { backgroundColor: colors.glass, ...t.glassBorder, } as const;
+  return StyleSheet.create({
+    date: { fontFamily: t.fonts.regular, color: colors.muted, textTransform: 'capitalize', marginTop: -10 },
+    card: { ...glass, flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: t.radius.lg, padding: 16 },
+    cardBody: { flex: 1, gap: 4 },
+    cardT: { fontFamily: t.fonts.bold, fontSize: 15, color: colors.text },
+    muted: { fontFamily: t.fonts.regular, fontSize: 12, color: colors.muted },
+    ringV: { fontFamily: t.fonts.black, fontSize: 24, color: colors.text, lineHeight: 28 },
+    ringL: { fontFamily: t.fonts.regular, fontSize: 12, color: colors.muted },
+    cta: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 6, backgroundColor: colors.action, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
+    ctaT: { fontFamily: t.fonts.bold, fontSize: 13, color: colors.onAction },
+    addRow: { flexDirection: 'row', gap: 10 },
+    input: { ...glass, flex: 1, height: 48, borderRadius: t.radius.md, paddingHorizontal: 16, color: colors.text, fontFamily: t.fonts.regular },
+    addBtn: { width: 48, height: 48, borderRadius: t.radius.md, backgroundColor: colors.action, alignItems: 'center', justifyContent: 'center' },
+    task: { ...glass, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: t.radius.md, padding: 14, minHeight: 56 },
+    taskBody: { flex: 1 },
+    taskT: { fontFamily: t.fonts.semibold, fontSize: 15, color: colors.text },
+    review: { borderColor: colors.primary },
+    struck: { textDecorationLine: 'line-through', color: colors.muted },
+  });
 });

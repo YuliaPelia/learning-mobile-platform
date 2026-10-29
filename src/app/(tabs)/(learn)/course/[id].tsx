@@ -11,9 +11,11 @@ import { useAuth } from '@/lib/auth/AuthProvider';
 import { getCourseDetail, getCourses } from '@/lib/api';
 import type { Course } from '@/lib/types';
 import { mockCourses } from '@/data/mock';
-import { colors, fonts, light, radius } from '@/theme';
+import { colors, light } from '@/theme';
+import { useSkin, makeStyles } from '@/theme/skin';
 
 export default function CourseDetail() {
+  useSkin(); // перерендер при зміні вигляду
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const list = useAsync(getCourses, mockCourses);
@@ -122,32 +124,34 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-const card = { backgroundColor: light.card, borderRadius: radius.md, borderWidth: 1, borderColor: light.border } as const;
 
-const styles = StyleSheet.create({
-  back: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
-  hero: { minHeight: 330, justifyContent: 'space-between' },
-  heroPlanet: { position: 'absolute', top: -20, right: -70 },
-  number: {
-    position: 'absolute',
-    left: -4,
-    top: 90,
-    fontSize: 170,
-    lineHeight: 190,
-    fontFamily: fonts.black,
-    color: 'rgba(255,255,255,0.14)',
-  },
-  heroText: { gap: 10, marginTop: 150 },
-  title: { fontSize: 34, lineHeight: 40, fontFamily: fonts.black, color: light.text },
-  desc: { fontSize: 15, lineHeight: 24, fontFamily: fonts.regular, color: light.muted },
-  highlight: { fontFamily: fonts.bold, color: light.accent },
-  section: { fontSize: 20, fontFamily: fonts.bold, color: light.text },
-  stats: { flexDirection: 'row', gap: 12 },
-  stat: { ...card, flex: 1, padding: 14, alignItems: 'center' },
-  statV: { fontSize: 20, fontFamily: fonts.black, color: colors.text },
-  statL: { fontSize: 12, fontFamily: fonts.regular, color: light.muted, marginTop: 2 },
-  cta: { gap: 8 },
-  ctaHint: { fontSize: 12, fontFamily: fonts.regular, color: light.muted, textAlign: 'center' },
-  note: { ...card, flexDirection: 'row', gap: 12, alignItems: 'flex-start', padding: 16 },
-  noteText: { flex: 1, fontFamily: fonts.regular, color: light.muted, lineHeight: 21 },
+const styles = makeStyles((t) => {
+  const card = { backgroundColor: light.card, borderRadius: t.radius.md, borderWidth: 1, borderColor: light.border } as const;
+  return StyleSheet.create({
+    back: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
+    hero: { minHeight: 330, justifyContent: 'space-between' },
+    heroPlanet: { position: 'absolute', top: -20, right: -70 },
+    number: {
+      position: 'absolute',
+      left: -4,
+      top: 90,
+      fontSize: 170,
+      lineHeight: 190,
+      fontFamily: t.fonts.black,
+      color: 'rgba(255,255,255,0.14)',
+    },
+    heroText: { gap: 10, marginTop: 150 },
+    title: { fontSize: 34, lineHeight: 40, fontFamily: t.fonts.black, color: light.text },
+    desc: { fontSize: 15, lineHeight: 24, fontFamily: t.fonts.regular, color: light.muted },
+    highlight: { fontFamily: t.fonts.bold, color: light.accent },
+    section: { fontSize: 20, fontFamily: t.fonts.bold, color: light.text },
+    stats: { flexDirection: 'row', gap: 12 },
+    stat: { ...card, flex: 1, padding: 14, alignItems: 'center' },
+    statV: { fontSize: 20, fontFamily: t.fonts.black, color: colors.text },
+    statL: { fontSize: 12, fontFamily: t.fonts.regular, color: light.muted, marginTop: 2 },
+    cta: { gap: 8 },
+    ctaHint: { fontSize: 12, fontFamily: t.fonts.regular, color: light.muted, textAlign: 'center' },
+    note: { ...card, flexDirection: 'row', gap: 12, alignItems: 'flex-start', padding: 16 },
+    noteText: { flex: 1, fontFamily: t.fonts.regular, color: light.muted, lineHeight: 21 },
+  });
 });

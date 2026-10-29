@@ -11,13 +11,15 @@ import { useAuth } from '@/lib/auth/AuthProvider';
 import { openDoc } from '@/lib/docs';
 import { activeProductIds, buyPlan, IAP_ENABLED, loadStorePrices, restore, type StoreProduct } from '@/lib/iap/service';
 import { freeSlot, PLAN_IDS, PLAN_INFO, productId, type PlanId } from '@/lib/iap/products';
-import { colors, fonts, radius } from '@/theme';
+import { colors } from '@/theme';
+import { useSkin, makeStyles } from '@/theme/skin';
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : 'Щось пішло не так. Спробуйте ще раз.');
 const store = Platform.OS === 'ios' ? 'App Store' : 'Google Play';
 
 /** Тарифи для батьків: вибір дитини й тарифу, покупка через магазин, відновлення покупок. Дитина купувати не може. */
 export default function Plans() {
+  useSkin(); // перерендер при зміні вигляду
   const { user } = useAuth();
   const parental = useParentalGate();
   const children = useAsync(() => (user?.role === 'parent' ? getStats() : Promise.resolve(null)), null, [user?.id]);
@@ -84,7 +86,7 @@ export default function Plans() {
       {children && children.length === 0 && <Text style={styles.muted}>Спершу додайте профіль дитини на сайті.</Text>}
       {children && children.length > 0 && (
         <>
-          <Text style={sectionTitle}>Для кого</Text>
+          <Text style={sectionTitle()}>Для кого</Text>
           <View style={styles.chips}>
             {children.map((c) => (
               <Pressable key={c.id} accessibilityRole="radio" accessibilityState={{ selected: selected === c.id }} onPress={() => setChildId(c.id)} style={[styles.chip, selected === c.id && styles.chipOn]}>
@@ -97,7 +99,7 @@ export default function Plans() {
 
       {subs.length > 0 && (
         <>
-          <Text style={sectionTitle}>Ваші підписки</Text>
+          <Text style={sectionTitle()}>Ваші підписки</Text>
           {subs.map((sub) => {
             const childName = children?.find((c) => c.id === sub.childId)?.name;
             return (
@@ -150,26 +152,28 @@ export default function Plans() {
   );
 }
 
-const styles = StyleSheet.create({
-  muted: { fontFamily: fonts.regular, color: colors.muted, lineHeight: 20 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
-  chipOn: { backgroundColor: colors.primary },
-  chipT: { fontFamily: fonts.semibold, color: colors.text },
-  chipTOn: { color: colors.onPrimary },
-  card: { gap: 8, backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 18 },
-  cardPopular: { borderColor: colors.primary, borderWidth: 2 },
-  badge: { alignSelf: 'flex-start', overflow: 'hidden', borderRadius: 999, backgroundColor: colors.primary, color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 12, paddingHorizontal: 10, paddingVertical: 3 },
-  name: { fontFamily: fonts.black, fontSize: 24, color: colors.text },
-  price: { fontFamily: fonts.black, fontSize: 32, color: colors.text, marginTop: 4 },
-  per: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
-  perk: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  perkT: { flex: 1, fontFamily: fonts.regular, color: colors.text },
-  sub: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: 14, minHeight: 64 },
-  subBody: { flex: 1, gap: 2 },
-  subT: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  subBtn: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.primary },
-  subBtnT: { fontFamily: fonts.bold, fontSize: 13, color: colors.onPrimary },
-  legal: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 18, color: colors.muted },
-  link: { fontFamily: fonts.semibold, color: colors.text, textDecorationLine: 'underline' },
+const styles = makeStyles((t) => {
+  return StyleSheet.create({
+    muted: { fontFamily: t.fonts.regular, color: colors.muted, lineHeight: 20 },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    chip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.card, ...t.glassBorder, },
+    chipOn: { backgroundColor: colors.action },
+    chipT: { fontFamily: t.fonts.semibold, color: colors.text },
+    chipTOn: { color: colors.onAction },
+    card: { gap: 8, backgroundColor: colors.glass, ...t.glassBorder, borderRadius: t.radius.lg, padding: 18 },
+    cardPopular: { borderColor: colors.primary, borderWidth: 2 },
+    badge: { alignSelf: 'flex-start', overflow: 'hidden', borderRadius: 999, backgroundColor: colors.action, color: colors.onAction, fontFamily: t.fonts.bold, fontSize: 12, paddingHorizontal: 10, paddingVertical: 3 },
+    name: { fontFamily: t.fonts.black, fontSize: 24, color: colors.text },
+    price: { fontFamily: t.fonts.black, fontSize: 34, color: colors.text, marginTop: 4 },
+    per: { fontFamily: t.fonts.regular, fontSize: 15, color: colors.muted },
+    perk: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    perkT: { flex: 1, fontFamily: t.fonts.regular, color: colors.text },
+    sub: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.glass, ...t.glassBorder, borderRadius: t.radius.md, padding: 14, minHeight: 64 },
+    subBody: { flex: 1, gap: 2 },
+    subT: { fontFamily: t.fonts.bold, fontSize: 15, color: colors.text },
+    subBtn: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.action },
+    subBtnT: { fontFamily: t.fonts.bold, fontSize: 13, color: colors.onAction },
+    legal: { fontFamily: t.fonts.regular, fontSize: 12, lineHeight: 18, color: colors.muted },
+    link: { fontFamily: t.fonts.semibold, color: colors.text, textDecorationLine: 'underline' },
+  });
 });

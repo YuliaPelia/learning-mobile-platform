@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { study, useStudy } from '@/lib/study/store';
 import type { StudentProgress } from '@/lib/types';
-import { colors, fonts, radius } from '@/theme';
+import { colors } from '@/theme';
+import { makeStyles } from '@/theme/skin';
 
 /** Тижневий звіт для батьків: активність, уроки й ціль, яку батьки ставлять дитині. */
 export function ChildReport({ child }: { child: StudentProgress }) {
@@ -50,15 +51,17 @@ function Step({ icon, label, onPress }: { icon: 'add' | 'remove'; label: string;
   );
 }
 
-const styles = StyleSheet.create({
-  card: { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 10 },
-  title: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  muted: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
-  goalRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  goalT: { flex: 1, fontFamily: fonts.semibold, color: colors.text },
-  step: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  bar: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.14)', overflow: 'hidden' },
-  fill: { height: 8, borderRadius: 4, backgroundColor: colors.primary },
-  share: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 44 },
-  shareT: { fontFamily: fonts.semibold, fontSize: 13, color: colors.text },
+const styles = makeStyles((t) => {
+  return StyleSheet.create({
+    card: { backgroundColor: colors.glass, ...t.glassBorder, borderRadius: t.radius.lg, padding: 16, gap: 10 },
+    title: { fontFamily: t.fonts.bold, fontSize: 15, color: colors.text },
+    muted: { fontFamily: t.fonts.regular, fontSize: 12, color: colors.muted },
+    goalRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    goalT: { flex: 1, fontFamily: t.fonts.semibold, color: colors.text },
+    step: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+    bar: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.14)', overflow: 'hidden' },
+    fill: { height: 8, borderRadius: 4, backgroundColor: colors.primary },
+    share: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 44 },
+    shareT: { fontFamily: t.fonts.semibold, fontSize: 13, color: colors.text },
+  });
 });

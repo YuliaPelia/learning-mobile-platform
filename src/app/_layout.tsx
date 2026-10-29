@@ -6,13 +6,14 @@ import {
   useFonts,
 } from '@expo-google-fonts/montserrat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Stack } from 'expo-router';
+import { router, Stack, useRootNavigationState } from 'expo-router';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/lib/auth/AuthProvider';
 import { getRefreshToken } from '@/lib/auth/session';
 import { clearCache, setCacheOwner } from '@/lib/cache';
 import { syncReminder } from '@/lib/study/notifications';
+import { onboarding, useOnboarding } from '@/lib/onboarding/store';
 import { setStudyOwner, study, useStudySelect } from '@/lib/study/store';
 import { colors, fonts } from '@/theme';
 
@@ -27,6 +28,7 @@ export default function RootLayout() {
     <AuthProvider>
       <StatusBar style="light" />
       <StudyBridge />
+      <OnboardingGate />
       <Stack
         screenOptions={{
           headerTintColor: colors.text,
@@ -37,6 +39,8 @@ export default function RootLayout() {
         }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         {/* Вхід не обовʼязковий на старті: його відкриває дія, що потребує акаунта */}
+        {/* Вхідний квіз: при першому запуску гостя; без нижньої панелі */}
+        <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade_from_bottom', gestureEnabled: false }} />
         <Stack.Screen name="sign-in" options={{ title: 'Вхід', presentation: 'modal' }} />
       </Stack>
     </AuthProvider>
@@ -66,7 +70,11 @@ function StudyBridge() {
       } else {
         // Вийшли або сесію скасовано: даних попереднього користувача на пристрої не лишаємо
         const previous = await AsyncStorage.getItem(LAST_OWNER).catch(() => null);
-        if (previous) study.wipe(previous);
+        if (previous) {
+          study.wipe(previous);
+          // Вийшов реальний користувач: відповіді квізу на спільному пристрої теж не лишаємо
+          onboarding.reset();
+        }
         AsyncStorage.removeItem(LAST_OWNER).catch(() => {});
         await clearCache();
       }
@@ -83,5 +91,21 @@ function StudyBridge() {
     syncReminder(study.get());
   }, [reminderKey]);
 
+  return null;
+}
+
+/**
+ * Перший запуск гостя → вхідний квіз. Тих, хто вже має акаунт (або чинну сесію, але зараз без мережі),
+ * не турбуємо: для них квіз позначається пропущеним, а запустити його можна з головної чи вкладки «Курси».
+ */
+function OnboardingGate() {
+  const { status } = useAuth();
+  const ob = useOnboarding();
+  const nav = useRootNavigationState();
+  useEffect(() => {
+    if (!nav?.key || status === 'loading' || ob.status !== 'new') return;
+    if (status === 'authed' || getRefreshToken()) onboarding.skip();
+    else router.push('/onboarding');
+  }, [nav?.key, status, ob.status]);
   return null;
 }

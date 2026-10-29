@@ -10,13 +10,15 @@ import { appleToken, appleAvailable, googleToken, type SocialToken } from '@/lib
 import { readAgeGate, writeAgeGate, type AgeGate } from '@/lib/auth/storage';
 import { useParentalGate } from '@/components/ParentalGate';
 import { openDoc } from '@/lib/docs';
-import { colors, fonts, radius } from '@/theme';
+import { colors, radius } from '@/theme';
+import { useSkin, makeStyles } from '@/theme/skin';
 
 type Mode = 'login' | 'register';
 type PendingRegister = { name: string; email: string; password: string; ageConfirm: boolean };
 
 // Вхід — модальний екран: гість спокійно переглядає каталог і потрапляє сюди, лише коли хоче вчитися.
 export default function SignIn() {
+  useSkin(); // перерендер при зміні вигляду
   const auth = useAuth();
   const parental = useParentalGate();
   const [mode, setMode] = useState<Mode>('login');
@@ -270,37 +272,39 @@ function SignupForm({ signup, initialYear, busy, onSubmit }: { signup: SignupReq
 function AgeSwitch({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <View style={styles.switchRow}>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.primary }} accessibilityLabel="Підтверджую, що мені є 18 років" />
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.action }} accessibilityLabel="Підтверджую, що мені є 18 років" />
       <Text style={styles.switchText}>Мені є 18 років, я батько/мати/опікун</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: 20, gap: 18 },
-  head: { alignItems: 'center', gap: 8, paddingTop: 12 },
-  logo: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 22, fontFamily: fonts.bold, color: colors.text, textAlign: 'center' },
-  sub: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
-  error: { backgroundColor: '#FFEDEF', borderRadius: radius.sm, padding: 12 },
-  errorText: { color: '#C73A4B', fontFamily: fonts.regular, fontSize: 14 },
-  tabs: { flexDirection: 'row', backgroundColor: colors.primarySoft, borderRadius: radius.md, padding: 4 },
-  tab: { flex: 1, height: 38, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
-  tabOn: { backgroundColor: colors.card },
-  tabText: { fontSize: 14, fontFamily: fonts.semibold, color: colors.muted },
-  tabTextOn: { color: colors.primary },
-  form: { gap: 14 },
-  warn: { color: colors.warm },
-  docLink: { color: colors.text, textDecorationLine: 'underline' },
-  backLink: { alignItems: 'center', minHeight: 44, justifyContent: 'center' },
-  note: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 19 },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  line: { flex: 1, height: 1, backgroundColor: colors.border },
-  or: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13 },
-  socials: { gap: 12 },
-  apple: { height: 50 },
-  hint: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, textAlign: 'center' },
-  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  switchText: { flex: 1, fontFamily: fonts.regular, fontSize: 13, color: colors.text, lineHeight: 18 },
+const styles = makeStyles((t) => {
+  return StyleSheet.create({
+    flex: { flex: 1, backgroundColor: colors.bg },
+    content: { padding: 20, gap: 18 },
+    head: { alignItems: 'center', gap: 8, paddingTop: 12 },
+    logo: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+    title: { fontSize: 24, fontFamily: t.fonts.bold, color: colors.text, textAlign: 'center' },
+    sub: { fontFamily: t.fonts.regular, fontSize: 15, color: colors.muted, textAlign: 'center', lineHeight: 20 },
+    error: { backgroundColor: '#FFEDEF', borderRadius: t.radius.sm, padding: 12 },
+    errorText: { color: '#C73A4B', fontFamily: t.fonts.regular, fontSize: 15 },
+    tabs: { flexDirection: 'row', backgroundColor: colors.primarySoft, borderRadius: t.radius.md, padding: 4 },
+    tab: { flex: 1, height: 38, borderRadius: t.radius.sm, alignItems: 'center', justifyContent: 'center' },
+    tabOn: { backgroundColor: colors.card },
+    tabText: { fontSize: 15, fontFamily: t.fonts.semibold, color: colors.muted },
+    tabTextOn: { color: colors.primary },
+    form: { gap: 14 },
+    warn: { color: colors.warm },
+    docLink: { color: colors.text, textDecorationLine: 'underline' },
+    backLink: { alignItems: 'center', minHeight: 44, justifyContent: 'center' },
+    note: { fontFamily: t.fonts.regular, fontSize: 13, color: colors.muted, lineHeight: 19 },
+    divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    line: { flex: 1, height: 1, backgroundColor: colors.border },
+    or: { color: colors.muted, fontFamily: t.fonts.regular, fontSize: 13 },
+    socials: { gap: 12 },
+    apple: { height: 50 },
+    hint: { fontFamily: t.fonts.regular, fontSize: 12, color: colors.muted, textAlign: 'center' },
+    switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    switchText: { flex: 1, fontFamily: t.fonts.regular, fontSize: 13, color: colors.text, lineHeight: 18 },
+  });
 });

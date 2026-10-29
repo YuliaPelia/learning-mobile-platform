@@ -12,6 +12,7 @@
     "expo-blur": "~58.0.5",
     "expo-constants": "~58.0.12",
     "expo-font": "~58.0.9",
+    "expo-haptics": "~58.0.7",
     "expo-iap": "^6.3.0",
     "expo-linear-gradient": "~58.0.3",
     "expo-linking": "~58.0.15",
@@ -22,7 +23,7 @@
     "expo-system-ui": "~58.0.7",
     "expo-web-browser": "~58.0.7",
     "react": "19.3.0",
-    "react-native": "0.88.0",
+    "react-native": "0.88.1",
     "react-native-safe-area-context": "~5.10.1",
     "react-native-screens": "~4.30.0",
     "react-native-svg": "15.16.0"

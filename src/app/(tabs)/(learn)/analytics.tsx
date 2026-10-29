@@ -6,11 +6,13 @@ import { achievements, bonusXp, goalStreak } from '@/lib/study/rewards';
 import { useStudy } from '@/lib/study/store';
 import { Ionicons } from '@expo/vector-icons';
 import { useCourseProgress } from '@/lib/study/useCourseProgress';
-import { colors, fonts, radius } from '@/theme';
+import { colors } from '@/theme';
+import { useSkin, makeStyles } from '@/theme/skin';
 
 const WD = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 export default function Analytics() {
+  useSkin(); // перерендер при зміні вигляду
   const s = useStudy();
   const course = useCourseProgress();
   const days = minutesByDay(s);
@@ -44,7 +46,7 @@ export default function Analytics() {
       </View>
       {forecast.date && <Text style={styles.muted}>{forecast.note}. Прогноз орієнтовний і змінюється разом з вашим темпом.</Text>}
 
-      <Text style={sectionTitle}>Час навчання · {week} хв за тиждень</Text>
+      <Text style={sectionTitle()}>Час навчання · {week} хв за тиждень</Text>
       <View style={[styles.card, styles.chart]}>
         {days.map((d) => (
           <View key={d.day} style={styles.col}>
@@ -56,7 +58,7 @@ export default function Analytics() {
         ))}
       </View>
 
-      <Text style={sectionTitle}>Слабкі теми</Text>
+      <Text style={sectionTitle()}>Слабкі теми</Text>
       {weak.length === 0 ? (
         <Text style={styles.muted}>Пройдіть квіз — тут зʼявляться теми, які варто повторити.</Text>
       ) : (
@@ -71,7 +73,7 @@ export default function Analytics() {
         ))
       )}
 
-      <Text style={sectionTitle}>Нагороди · +{bonusXp(s)} XP · ціль {goalStreak(s)} дн. поспіль</Text>
+      <Text style={sectionTitle()}>Нагороди · +{bonusXp(s)} XP · ціль {goalStreak(s)} дн. поспіль</Text>
       <View style={styles.badges}>
         {achievements(s).map((a) => (
           <View key={a.id} style={[styles.badge, !a.earned && styles.locked]} accessible accessibilityLabel={`${a.title}. ${a.earned ? 'Отримано' : a.hint}`}>
@@ -82,7 +84,7 @@ export default function Analytics() {
         ))}
       </View>
 
-      <Text style={sectionTitle}>Квізи</Text>
+      <Text style={sectionTitle()}>Квізи</Text>
       <View style={styles.tiles}>
         <Tile value={acc === null ? '—' : `${Math.round(acc * 100)}%`} label="успішність" />
         <Tile value={String(s.quizResults.length)} label="спроб" />
@@ -101,28 +103,30 @@ function Tile({ value, label }: { value: string; label: string }) {
   );
 }
 
-const glass = { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border } as const;
 
-const styles = StyleSheet.create({
-  card: { ...glass, flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: radius.lg, padding: 16 },
-  body: { flex: 1, gap: 4 },
-  cardT: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  forecast: { fontFamily: fonts.black, fontSize: 18, color: colors.primary },
-  muted: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted },
-  ringV: { fontFamily: fonts.black, fontSize: 22, color: colors.text },
-  chart: { alignItems: 'flex-end', justifyContent: 'space-between', height: 160 },
-  col: { flex: 1, alignItems: 'center', gap: 6, height: '100%' },
-  track: { flex: 1, width: 18, justifyContent: 'flex-end', borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
-  fill: { width: '100%', backgroundColor: colors.primary, borderRadius: 9 },
-  topic: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  topicT: { width: 100, fontFamily: fonts.semibold, fontSize: 13, color: colors.text },
-  topicBar: { flex: 1, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.14)', overflow: 'hidden' },
-  fill2: { height: 8, backgroundColor: colors.success },
-  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  badge: { ...glass, width: '48%', borderRadius: radius.md, padding: 12, gap: 4 },
-  locked: { borderStyle: 'dashed' },
-  badgeT: { fontFamily: fonts.bold, fontSize: 13, color: colors.text },
-  tiles: { flexDirection: 'row', gap: 10 },
-  tile: { ...glass, flex: 1, borderRadius: radius.md, paddingVertical: 14, alignItems: 'center', gap: 2 },
-  tileV: { fontFamily: fonts.black, fontSize: 20, color: colors.text },
+const styles = makeStyles((t) => {
+  const glass = { backgroundColor: colors.glass, ...t.glassBorder, } as const;
+  return StyleSheet.create({
+    card: { ...glass, flexDirection: 'row', alignItems: 'center', gap: 16, borderRadius: t.radius.lg, padding: 16 },
+    body: { flex: 1, gap: 4 },
+    cardT: { fontFamily: t.fonts.bold, fontSize: 16, color: colors.text },
+    forecast: { fontFamily: t.fonts.black, fontSize: 20, color: colors.primary },
+    muted: { fontFamily: t.fonts.regular, fontSize: 12, color: colors.muted },
+    ringV: { fontFamily: t.fonts.black, fontSize: 24, color: colors.text },
+    chart: { alignItems: 'flex-end', justifyContent: 'space-between', height: 160 },
+    col: { flex: 1, alignItems: 'center', gap: 6, height: '100%' },
+    track: { flex: 1, width: 18, justifyContent: 'flex-end', borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
+    fill: { width: '100%', backgroundColor: colors.primary, borderRadius: 9 },
+    topic: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    topicT: { width: 100, fontFamily: t.fonts.semibold, fontSize: 13, color: colors.text },
+    topicBar: { flex: 1, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.14)', overflow: 'hidden' },
+    fill2: { height: 8, backgroundColor: colors.success },
+    badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    badge: { ...glass, width: '48%', borderRadius: t.radius.md, padding: 12, gap: 4 },
+    locked: { borderStyle: 'dashed' },
+    badgeT: { fontFamily: t.fonts.bold, fontSize: 13, color: colors.text },
+    tiles: { flexDirection: 'row', gap: 10 },
+    tile: { ...glass, flex: 1, borderRadius: t.radius.md, paddingVertical: 14, alignItems: 'center', gap: 2 },
+    tileV: { fontFamily: t.fonts.black, fontSize: 20, color: colors.text },
+  });
 });

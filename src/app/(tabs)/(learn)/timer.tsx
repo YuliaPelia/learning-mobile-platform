@@ -6,7 +6,8 @@ import { Ring } from '@/components/Ring';
 import { Screen } from '@/components/Screen';
 import { cancel, scheduleTimerEnd } from '@/lib/study/notifications';
 import { study, useStudy } from '@/lib/study/store';
-import { colors, fonts, radius } from '@/theme';
+import { colors } from '@/theme';
+import { useSkin, calm, makeStyles } from '@/theme/skin';
 
 type Mode = 'focus' | 'short' | 'long';
 const MODES: { id: Mode; label: string }[] = [
@@ -18,6 +19,7 @@ const MODES: { id: Mode; label: string }[] = [
 const fmt = (sec: number) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 
 export default function Timer() {
+  useSkin(); // перерендер при зміні вигляду
   const { settings, tasks } = useStudy();
   const [mode, setMode] = useState<Mode>('focus');
   const [taskId, setTaskId] = useState<string | undefined>();
@@ -107,7 +109,7 @@ export default function Timer() {
           <Text style={styles.time} accessibilityLabel={`Залишилось ${Math.floor(left / 60)} хвилин ${left % 60} секунд`}>
             {fmt(left)}
           </Text>
-          <Text style={styles.sub}>{finished ? (mode === 'focus' ? 'Чудова робота!' : 'Перерва скінчилась') : mode === 'focus' ? 'Час вчитись' : 'Відпочиньте'}</Text>
+          <Text style={styles.sub}>{finished ? (mode === 'focus' ? calm('Чудова робота!') : 'Перерва скінчилась') : mode === 'focus' ? 'Час вчитись' : 'Відпочиньте'}</Text>
         </Ring>
       </View>
 
@@ -155,24 +157,26 @@ function Stepper({ title, value, onChange, disabled }: { title: string; value: n
   );
 }
 
-const styles = StyleSheet.create({
-  modes: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  mode: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.card },
-  modeOn: { backgroundColor: colors.primary },
-  modeT: { fontFamily: fonts.semibold, fontSize: 13, color: colors.text },
-  modeTOn: { color: colors.onPrimary },
-  ringBox: { alignItems: 'center', paddingVertical: 8 },
-  time: { fontFamily: fonts.black, fontSize: 56, color: colors.text },
-  sub: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted },
-  actions: { gap: 10 },
-  card: { backgroundColor: colors.glass, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 10 },
-  label: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  muted: { fontFamily: fonts.regular, color: colors.muted },
-  taskRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36 },
-  taskT: { flex: 1, fontFamily: fonts.semibold, color: colors.text },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  stepT: { flex: 1, fontFamily: fonts.regular, color: colors.text },
-  stepBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  stepV: { minWidth: 28, textAlign: 'center', fontFamily: fonts.bold, color: colors.text },
-  off: { opacity: 0.4 },
+const styles = makeStyles((t) => {
+  return StyleSheet.create({
+    modes: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+    mode: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.card },
+    modeOn: { backgroundColor: colors.action },
+    modeT: { fontFamily: t.fonts.semibold, fontSize: 13, color: colors.text },
+    modeTOn: { color: colors.onAction },
+    ringBox: { alignItems: 'center', paddingVertical: 8 },
+    time: { fontFamily: t.fonts.black, fontSize: 56, color: colors.text },
+    sub: { fontFamily: t.fonts.regular, fontSize: 15, color: colors.muted },
+    actions: { gap: 10 },
+    card: { backgroundColor: colors.glass, ...t.glassBorder, borderRadius: t.radius.lg, padding: 16, gap: 10 },
+    label: { fontFamily: t.fonts.bold, fontSize: 15, color: colors.text },
+    muted: { fontFamily: t.fonts.regular, color: colors.muted },
+    taskRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36 },
+    taskT: { flex: 1, fontFamily: t.fonts.semibold, color: colors.text },
+    stepper: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    stepT: { flex: 1, fontFamily: t.fonts.regular, color: colors.text },
+    stepBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+    stepV: { minWidth: 28, textAlign: 'center', fontFamily: t.fonts.bold, color: colors.text },
+    off: { opacity: 0.4 },
+  });
 });

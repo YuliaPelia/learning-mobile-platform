@@ -14,12 +14,12 @@ export type CourseProgress = {
 };
 
 /** Поточний курс учня: скільки уроків залишилось і що проходити далі. Для гостя й батьків — порожньо. */
-export function useCourseProgress(): CourseProgress {
+export function useCourseProgress(reload = 0): CourseProgress {
   const { user } = useAuth();
-  const stats = useAsync(() => (user?.role === 'student' ? getStats() : Promise.resolve(null)), null, [user?.id]);
+  const stats = useAsync(() => (user?.role === 'student' ? getStats() : Promise.resolve(null)), null, [user?.id, reload]);
   const s = stats?.[0]?.stats ?? null;
   const slug = s?.currentCourse?.slug ?? null;
-  const detail = useAsync(() => (slug ? getCourseDetail(slug) : Promise.resolve(null)), null, [slug]);
+  const detail = useAsync(() => (slug ? getCourseDetail(slug) : Promise.resolve(null)), null, [slug, reload]);
   const left = detail?.lessons.filter((l) => !l.done) ?? [];
   return {
     stats: s,
