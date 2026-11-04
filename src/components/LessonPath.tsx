@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { PixelBurst, type BurstKind } from '@/components/PixelBurst';
 import { Robot } from '@/components/Robot';
 import { useReducedMotion } from '@/components/useReducedMotion';
+import { success } from '@/lib/haptics';
 import type { Lesson } from '@/lib/types';
 import { colors, light } from '@/theme';
 import { makeStyles, useSkin } from '@/theme/skin';
@@ -27,12 +29,18 @@ const LOCK_HINT: Record<Lesson['access'], string | null> = {
 
 const GREEN_EDGE = '#0E7A4D';
 
+type Burst = { id: number; x: number; y: number; kind: BurstKind; label?: string; delay?: number };
+
 /** Доріжка уроків: кружечки хвилею з'єднані стежкою, робот летить біля поточного уроку й радіє пройденому. */
 export function LessonPath({ lessons }: { lessons: Lesson[] }) {
   const [width, setWidth] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [pulse] = useState(() => new Animated.Value(0));
   const reduced = useReducedMotion();
+  const pro = useSkin() === 'pro';
+  const [bursts, setBursts] = useState<Burst[]>([]);
+  const prevDone = useRef<Set<number> | null>(null);
+  const burstId = useRef(0);
 
   const current = lessons.findIndex((l) => !l.done && l.access === 'ok');
   const doneCount = lessons.filter((l) => l.done).length;
@@ -55,6 +63,31 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
     return () => loop.stop();
   }, [pulse, reduced]);
 
+  // Святкування: коли під час перегляду урок став «пройденим» — піксельні іскри на вузлі,
+  // блиск на наступному вузлі, що відкрився, і салют, якщо курс завершено. Перший показ екрана не святкуємо.
+  useEffect(() => {
+    const nowDone = new Set(lessons.filter((l) => l.done).map((l) => l.order));
+    const before = prevDone.current;
+    prevDone.current = nowDone;
+    if (!before || width === 0) return;
+    const fresh = lessons.map((l, i) => ({ l, i })).filter(({ l }) => l.done && !before.has(l.order));
+    if (!fresh.length) return;
+    success();
+    if (pro || reduced) return;
+    const mid = width / 2;
+    const y = (i: number) => i * ROW + ROW / 2 + NODE / 2 - 4;
+    const x = (i: number) => mid + OFFSETS[i % OFFSETS.length];
+    const next: Burst[] = [];
+    for (const { l, i } of fresh) {
+      next.push({ id: ++burstId.current, x: x(i), y: y(i), kind: 'pickup', label: `+${l.xp} XP` });
+      const n = lessons[i + 1];
+      if (n && !n.done && n.access === 'ok') next.push({ id: ++burstId.current, x: x(i + 1), y: y(i + 1), kind: 'sparkle', delay: 500 });
+    }
+    if (nowDone.size === lessons.length) next.push({ id: ++burstId.current, x: mid, y: y(lessons.length - 1), kind: 'finale', delay: 300 });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBursts((b) => [...b, ...next]);
+  }, [lessons, width, pro, reduced]);
+
   const cx = (i: number) => width / 2 + OFFSETS[i % OFFSETS.length];
   const cy = (i: number) => i * ROW + ROW / 2 + NODE / 2 - 4;
   const height = lessons.length * ROW + 24;
@@ -65,7 +98,6 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
     return `M${cx(i)} ${cy(i)} C${cx(i)} ${midY} ${cx(i + 1)} ${midY} ${cx(i + 1)} ${cy(i + 1)}`;
   };
 
-  const pro = useSkin() === 'pro';
   const halo = { opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.55] }) }] };
 
   return (
@@ -140,6 +172,18 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
                 </View>
               );
             })}
+
+            {bursts.map((b) => (
+              <PixelBurst
+                key={b.id}
+                x={b.x}
+                y={b.y}
+                kind={b.kind}
+                label={b.label}
+                delay={b.delay}
+                onDone={() => setBursts((all) => all.filter((e) => e.id !== b.id))}
+              />
+            ))}
           </>
         )}
       </View>

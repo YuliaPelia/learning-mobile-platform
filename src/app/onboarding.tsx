@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
+import { Fireflies } from '@/components/Fireflies';
 import { MascotBubble } from '@/components/home/MascotBubble';
 import { AnimatedBar, PressableScale, Reveal } from '@/components/motion';
 import { Planet } from '@/components/Planet';
@@ -117,7 +118,7 @@ export default function Onboarding() {
         : `Чудово! Лишилось ${left} ${left === 1 ? 'запитання' : left < 5 ? 'запитання' : 'запитань'}.`);
 
   return (
-    <Screen>
+    <Screen background={<Fireflies />}>
       <View style={styles.top}>
         {step > 0 && !done ? (
           <Pressable accessibilityRole="button" accessibilityLabel="Назад" onPress={() => setStep((s) => s - 1)} hitSlop={8} style={styles.iconBtn}>

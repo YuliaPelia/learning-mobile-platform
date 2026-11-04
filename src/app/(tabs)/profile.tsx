@@ -129,8 +129,8 @@ export default function Profile() {
           <View style={styles.menu}>
             <View style={[styles.menuRow, styles.menuDivider]}>
               <Ionicons name="notifications-outline" size={22} color={colors.primary} />
-              <Text style={styles.menuT}>Щоденне нагадування о {learn.settings.reminderHour}:00</Text>
-              <Switch
+              <Text style={styles.menuT}>Нагадування щодня о {learn.settings.reminderHour}:00</Text>
+              <View style={styles.switchBox}><Switch
                 accessibilityLabel="Щоденне нагадування"
                 value={learn.settings.reminderOn}
                 trackColor={{ true: colors.action }}
@@ -141,14 +141,14 @@ export default function Profile() {
                   }
                   study.setSettings({ reminderOn: on });
                 }}
-              />
+              /></View>
             </View>
             <View style={styles.menuRow}>
               <Ionicons name="contrast-outline" size={22} color={colors.primary} />
               <Text style={styles.menuT}>Спокійний вигляд</Text>
-              <Switch accessibilityLabel="Спокійний вигляд" value={skinNow === 'pro'} trackColor={{ true: colors.action }} onValueChange={(on) => {
+              <View style={styles.switchBox}><Switch accessibilityLabel="Спокійний вигляд" value={skinNow === 'pro'} trackColor={{ true: colors.action }} onValueChange={(on) => {
                 setSkin(on ? 'pro' : 'play');
-              }} />
+              }} /></View>
             </View>
           </View>
         </>
@@ -256,7 +256,9 @@ const styles = makeStyles((t) => {
     tileV: { fontSize: 20, fontFamily: t.fonts.black, color: colors.text },
     tileL: { fontSize: 12, fontFamily: t.fonts.regular, color: colors.muted, textAlign: 'center' },
     menu: { backgroundColor: colors.glass, ...t.glassBorder, borderRadius: t.radius.lg, overflow: 'hidden' },
-    menuRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, minHeight: 56 },
+    menuRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 8, minHeight: 56 },
+    // Фіксований бокс: Switch сам по собі в рядку зміщується вгору
+    switchBox: { width: 51, height: 31, alignItems: 'center', justifyContent: 'center' },
     menuDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
     menuT: { flex: 1, fontSize: 15, fontFamily: t.fonts.semibold, color: colors.text },
     badge: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, backgroundColor: colors.action, alignItems: 'center', justifyContent: 'center' },

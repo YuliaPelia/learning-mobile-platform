@@ -10,9 +10,9 @@ import { SpaceDecor } from '@/components/SpaceDecor';
 import { colors, glassBorder, type } from '@/theme';
 import { makeStyles, skinTokens, useSkin } from '@/theme/skin';
 
-type Props = { children: ReactNode; title?: string; back?: boolean; /** Потягнути вниз, щоб оновити. */ onRefresh?: () => Promise<unknown> | void };
+type Props = { children: ReactNode; title?: string; back?: boolean; /** Потягнути вниз, щоб оновити. */ onRefresh?: () => Promise<unknown> | void; /** Додатковий фон під вмістом (наприклад, анімований). */ background?: ReactNode };
 
-export function Screen({ children, title, back, onRefresh }: Props) {
+export function Screen({ children, title, back, onRefresh, background }: Props) {
   const insets = useSafeAreaInsets();
   const skin = skinTokens[useSkin()];
   const [refreshing, setRefreshing] = useState(false);
@@ -68,6 +68,7 @@ export function Screen({ children, title, back, onRefresh }: Props) {
     <LinearGradient colors={skin.gradient} locations={[0, 0.35, 0.7, 1]} style={styles.bg}>
       {skin.decor && <Orbs />}
       {skin.decor && <SpaceDecor />}
+      {background}
       {content}
       {title ? (
         <View pointerEvents={collapsed ? 'auto' : 'none'} style={[styles.bar, { height: barH }]} importantForAccessibility={collapsed ? 'yes' : 'no-hide-descendants'} accessibilityElementsHidden={!collapsed}>

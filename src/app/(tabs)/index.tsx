@@ -177,7 +177,7 @@ function ParentHome({ name, reload }: { name?: string; reload: number }) {
             {k.stats.currentCourse && <Text style={styles.small}>Зараз проходить: {k.stats.currentCourse.title}</Text>}
             {sub && <Alert text="Оберіть курс, який відкриє тариф" action="Обрати" onPress={() => router.push({ pathname: '/choose-course', params: { subscriptionId: sub.id, child: k.name } })} />}
             {trouble && <Alert text="Проблема з оплатою підписки" action={IAP_ENABLED ? 'Тарифи' : undefined} onPress={() => router.push('/plans')} />}
-            <Pressable accessibilityRole="button" onPress={() => router.push('/profile')} style={styles.more}>
+            <Pressable accessibilityRole="button" accessibilityLabel={`Докладна статистика: ${k.name}`} onPress={() => router.push({ pathname: '/child', params: { id: k.id } })} style={styles.more}>
               <Text style={styles.moreT}>Докладна статистика</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.text} />
             </Pressable>
