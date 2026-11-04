@@ -6,7 +6,6 @@ import { useState, type ReactNode } from 'react';
 import { Animated, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import { SpaceDecor } from '@/components/SpaceDecor';
 import { colors, glassBorder, type } from '@/theme';
 import { makeStyles, skinTokens, useSkin } from '@/theme/skin';
 
@@ -67,7 +66,6 @@ export function Screen({ children, title, back, onRefresh, background }: Props) 
   return (
     <LinearGradient colors={skin.gradient} locations={[0, 0.35, 0.7, 1]} style={styles.bg}>
       {skin.decor && <Orbs />}
-      {skin.decor && <SpaceDecor />}
       {background}
       {content}
       {title ? (

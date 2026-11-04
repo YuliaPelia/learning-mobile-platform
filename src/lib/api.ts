@@ -2,7 +2,7 @@ import { courseImages } from '@/data/courseImages';
 import { mockCourses } from '@/data/mock';
 import { ownedKey, readCache, writeCache } from '@/lib/cache';
 import { ApiError, apiRequest } from '@/lib/http';
-import type { Course, CourseDetail, IconName, Lesson, GradientName, StudentProgress } from './types';
+import type { Course, CourseDetail, IconName, Lesson, LessonContent, GradientName, QuizResult, StudentProgress } from './types';
 
 type ApiCourse = {
   slug: string;
@@ -14,6 +14,8 @@ type ApiCourse = {
   lessonsCount?: number;
   freeLessons: number;
   status: string;
+  /** Обкладинка, завантажена в адмінці (https); null — немає. */
+  coverUrl?: string | null;
 };
 
 const CATEGORY: Record<ApiCourse['category'], { label: string; gradient: GradientName; icon: IconName }> = {
@@ -37,7 +39,8 @@ function toCourse(c: ApiCourse): Course {
     description: c.description ?? '',
     gradient: cat.gradient,
     icon: cat.icon,
-    image: courseImages[c.slug],
+    // Обкладинка з адмінки важливіша за вбудовану картинку в застосунку
+    image: c.coverUrl ? { uri: c.coverUrl } : courseImages[c.slug],
     soon: c.status !== 'published',
   };
 }
@@ -132,4 +135,22 @@ export async function getSubscriptions(): Promise<MobileSubscription[]> {
 /** Обирає курс для підписки «1 курс на вибір». Робиться один раз; помилку сервера (напр. курс лише для Преміуму) кидає далі. */
 export async function chooseSubscriptionCourse(subscriptionId: string, courseSlug: string): Promise<void> {
   await apiRequest(`/subscriptions/${encodeURIComponent(subscriptionId)}/course`, { method: 'POST', body: { courseSlug }, auth: 'required' });
+}
+
+const lessonPath = (slug: string, order: number) => `/courses/${encodeURIComponent(slug)}/lessons/${order}`;
+
+/** Зміст уроку. Кидає ApiError: 403 — урок закритий (code = причина), 0 — немає звʼязку. */
+export async function getLesson(slug: string, order: number): Promise<LessonContent> {
+  const { lesson } = await apiRequest<{ lesson: LessonContent }>(lessonPath(slug, order), { auth: 'required' });
+  return lesson;
+}
+
+/** Позначає відео- чи текстовий урок пройденим (ідемпотентно). */
+export async function completeLesson(slug: string, order: number): Promise<{ xp: number }> {
+  return apiRequest<{ xp: number }>(`${lessonPath(slug, order)}/complete`, { method: 'POST', body: {}, auth: 'required' });
+}
+
+/** Надсилає відповіді тесту (індекси обраних варіантів); бали рахує сервер. */
+export async function submitLessonQuiz(slug: string, order: number, answers: number[]): Promise<QuizResult> {
+  return apiRequest<QuizResult>(`${lessonPath(slug, order)}/quiz`, { method: 'POST', body: { answers }, auth: 'required' });
 }

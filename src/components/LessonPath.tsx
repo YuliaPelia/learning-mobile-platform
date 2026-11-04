@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -32,7 +33,7 @@ const GREEN_EDGE = '#0E7A4D';
 type Burst = { id: number; x: number; y: number; kind: BurstKind; label?: string; delay?: number };
 
 /** Доріжка уроків: кружечки хвилею з'єднані стежкою, робот летить біля поточного уроку й радіє пройденому. */
-export function LessonPath({ lessons }: { lessons: Lesson[] }) {
+export function LessonPath({ lessons, courseSlug, canOpen }: { lessons: Lesson[]; courseSlug: string; /** Уроки відкриває лише дитина. */ canOpen: boolean }) {
   const [width, setWidth] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [pulse] = useState(() => new Animated.Value(0));
@@ -188,12 +189,12 @@ export function LessonPath({ lessons }: { lessons: Lesson[] }) {
         )}
       </View>
 
-      {selected !== null && lessons[selected] && <View accessibilityLiveRegion="polite"><LessonCard lesson={lessons[selected]} /></View>}
+      {selected !== null && lessons[selected] && <View accessibilityLiveRegion="polite"><LessonCard lesson={lessons[selected]} courseSlug={courseSlug} canOpen={canOpen} /></View>}
     </View>
   );
 }
 
-function LessonCard({ lesson: l }: { lesson: Lesson }) {
+function LessonCard({ lesson: l, courseSlug, canOpen }: { lesson: Lesson; courseSlug: string; canOpen: boolean }) {
   return (
     <View style={styles.card}>
       <Text style={styles.cardT}>Урок {l.order}: {l.title}</Text>
@@ -202,6 +203,16 @@ function LessonCard({ lesson: l }: { lesson: Lesson }) {
         +{l.xp} XP{l.free ? ' · безкоштовно' : ''}
         {LOCK_HINT[l.access] ? ` · ${LOCK_HINT[l.access]}` : l.done ? ' · пройдено' : ''}
       </Text>
+      {canOpen && l.access === 'ok' && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${l.done ? 'Повторити' : 'Почати'} урок ${l.order}`}
+          onPress={() => router.push({ pathname: '/lesson/[slug]/[order]', params: { slug: courseSlug, order: String(l.order) } })}
+          style={styles.cardBtn}>
+          <Text style={styles.cardBtnT}>{l.done ? 'Повторити урок' : 'Почати урок'}</Text>
+          <Ionicons name="arrow-forward" size={18} color={colors.onAction} />
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -239,6 +250,8 @@ const styles = makeStyles((t) => {
     card: { backgroundColor: light.card, borderWidth: 1, borderColor: light.border, borderRadius: t.radius.md, padding: 14, gap: 4, marginTop: 4 },
     cardT: { fontFamily: t.fonts.bold, fontSize: 15, color: light.text },
     cardP: { fontFamily: t.fonts.regular, fontSize: 13, lineHeight: 19, color: light.muted },
+    cardBtn: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8, borderRadius: t.radius.md, backgroundColor: colors.action },
+    cardBtnT: { fontFamily: t.fonts.bold, fontSize: 15, color: colors.onAction },
     cardMeta: { fontFamily: t.fonts.semibold, fontSize: 12, color: light.accent },
   });
 });

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { LessonPath } from '@/components/LessonPath';
@@ -20,7 +21,14 @@ export default function CourseDetail() {
   const { user } = useAuth();
   const list = useAsync(getCourses, mockCourses);
   // Після входу стан уроків (відкрито/закрито) приходить уже для цього користувача
-  const detail = useAsync(() => getCourseDetail(id), null, [id, user?.id]);
+  // Екран лишається в стеку, поки відкрито урок: при поверненні перезавантажуємо стан («пройдено», наступний урок)
+  const [tick, setTick] = useState(0);
+  const first = useRef(true);
+  useFocusEffect(useCallback(() => {
+    if (first.current) first.current = false;
+    else setTick((n) => n + 1);
+  }, []));
+  const detail = useAsync(() => getCourseDetail(id), null, [id, user?.id, tick]);
   const course = detail?.course ?? list.find((c) => c.id === id);
   const number = list.findIndex((c) => c.id === id) + 1;
 
@@ -52,7 +60,7 @@ export default function CourseDetail() {
       {detail && detail.lessons.length > 0 && (
         <>
           <Text style={styles.section}>Твій шлях</Text>
-          <LessonPath lessons={detail.lessons} />
+          <LessonPath lessons={detail.lessons} courseSlug={id} canOpen={user?.role === 'student'} />
         </>
       )}
     </Screen>

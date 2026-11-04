@@ -75,3 +75,25 @@ export type StudentStats = {
 };
 
 export type StudentProgress = { id: string; name: string; stats: StudentStats };
+
+/** Зміст уроку для дитини (GET /courses/:slug/lessons/:order). Правильних відповідей тесту тут немає. */
+export type LessonContent = {
+  order: number;
+  title: string;
+  summary: string;
+  type: 'video' | 'text' | 'quiz';
+  xp: number;
+  done: boolean;
+  /** Скільки всього уроків у курсі. */
+  total: number;
+  markdown: string;
+  /** file — пряме відео (граємо в застосунку); embed — YouTube/Vimeo (відкриваємо в браузері). */
+  video: { url: string; kind: 'file' | 'embed' } | null;
+  questions: { q: string; options: string[] }[];
+  homework: { task: string; status: 'pending' | 'submitted' | 'reviewed' | null } | null;
+  /** Номер наступного відкритого уроку або null. */
+  next: number | null;
+  course: { slug: string; title: string };
+};
+
+export type QuizResult = { correct: number; total: number; passed: boolean; score: number; xp: number };
